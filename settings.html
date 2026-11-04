@@ -378,13 +378,16 @@
   <!-- 3. Model Scale Card -->
   <div class="card">
     <div class="card-title">
-      <span>🔍 캐릭터 배율 조절</span>
-      <span class="card-title-hint">단축키 Ctrl + + / -</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>🔍 캐릭터 배율 조절</span>
+        <span id="scale-val" style="font-size:11px; color:#4ADE80; font-weight:700">1.0x</span>
+      </div>
+      <span class="card-title-hint">단축키 Ctrl + + / - (0.2 단위)</span>
     </div>
     <div class="btn-group">
-      <button class="btn-chip" id="btn-scale-down">➖ 축소 (-0.1)</button>
+      <button class="btn-chip" id="btn-scale-down">➖ 축소 (-0.2)</button>
       <button class="btn-chip" id="btn-scale-reset">1.0x 초기화</button>
-      <button class="btn-chip" id="btn-scale-up">➕ 확대 (+0.1)</button>
+      <button class="btn-chip" id="btn-scale-up">➕ 확대 (+0.2)</button>
     </div>
   </div>
 
@@ -478,8 +481,7 @@
 
     document.getElementById('btn-reset-expr').addEventListener('click', () => {
       document.querySelectorAll('.btn-expr').forEach(b => b.classList.remove('active'));
-      bc.postMessage({ type: 'scale_reset' });
-      bc.postMessage({ type: 'expression', expr: expressionsList[9] });
+      bc.postMessage({ type: 'expression_reset' });
     });
 
     // Canvas Size Controls
@@ -513,16 +515,39 @@
       applyCanvasDimensions(inpW.value, inpH.value);
     });
 
-    // Model Scale Controls
+    // Model Scale Controls (0.2 step)
+    const scaleVal = document.getElementById('scale-val');
+    function updateScaleDisplay(s) {
+      if (scaleVal && typeof s === 'number') {
+        scaleVal.textContent = s.toFixed(1) + 'x';
+      }
+    }
+
+    let initScale = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
+    if (!isNaN(initScale)) {
+      initScale = Math.round((Math.round(initScale / 0.2) * 0.2) * 10) / 10;
+      updateScaleDisplay(initScale);
+    }
+
     document.getElementById('btn-scale-down').addEventListener('click', () => {
-      bc.postMessage({ type: 'scale_delta', delta: -0.1 });
+      bc.postMessage({ type: 'scale_delta', delta: -0.2 });
     });
     document.getElementById('btn-scale-up').addEventListener('click', () => {
-      bc.postMessage({ type: 'scale_delta', delta: 0.1 });
+      bc.postMessage({ type: 'scale_delta', delta: 0.2 });
     });
     document.getElementById('btn-scale-reset').addEventListener('click', () => {
       bc.postMessage({ type: 'scale_reset' });
     });
+
+    // Listen for companion broadcast messages (scale updates)
+    bc.onmessage = (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.type === 'scale_updated' && typeof data.scale === 'number') {
+        updateScaleDisplay(data.scale);
+      }
+    };
+    bc.postMessage({ type: 'get_scale' });
 
     // Subtitle Controls
     const chkSubtitle = document.getElementById('chk-subtitle');

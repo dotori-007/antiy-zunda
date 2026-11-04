@@ -184,8 +184,15 @@
       } catch(e) {}
     }
 
-    // Zoom/scale level persisted in localStorage
-    let currentScaleMultiplier = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
+    // Zoom/scale level persisted in localStorage (snapped to 0.2 rate)
+    let savedZoom = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
+    if (isNaN(savedZoom)) savedZoom = 1.0;
+    let currentScaleMultiplier = Math.max(0.4, Math.min(3.0, Math.round((Math.round(savedZoom / 0.2) * 0.2) * 10) / 10));
+    localStorage.setItem('zundamon_zoom', currentScaleMultiplier.toFixed(1));
+
+    function broadcastScale() {
+      bc.postMessage({ type: 'scale_updated', scale: currentScaleMultiplier });
+    }
 
     function resizeModel() {
       if (!live2dModel) return;
@@ -198,11 +205,13 @@
       live2dModel.position.set(w / 2, h / 2 + 35 * currentScaleMultiplier);
     }
 
-    function changeScale(delta) {
-      let nextScale = Math.round((currentScaleMultiplier + delta) * 10) / 10;
-      currentScaleMultiplier = Math.max(0.4, Math.min(3.5, nextScale));
+    function changeScale(delta = 0.2) {
+      let raw = (Math.round(currentScaleMultiplier * 10) + Math.round(delta * 10)) / 10;
+      let rounded = Math.round(raw / 0.2) * 0.2;
+      currentScaleMultiplier = Math.max(0.4, Math.min(3.0, Math.round(rounded * 10) / 10));
       localStorage.setItem('zundamon_zoom', currentScaleMultiplier.toFixed(1));
       resizeModel();
+      broadcastScale();
       showToast(`🔍 배율: ${currentScaleMultiplier.toFixed(1)}x`);
     }
 
@@ -210,8 +219,13 @@
       currentScaleMultiplier = 1.0;
       localStorage.setItem('zundamon_zoom', '1.0');
       resizeModel();
+      broadcastScale();
+      showToast(`🔍 배율: 1.0x (초기화)`);
+    }
+
+    function resetExpression() {
       applyExpression(expressionsList[0]);
-      showToast(`🌱 기본 상태로 초기화 (1.0x)`);
+      showToast(`🎭 기본 표정으로 초기화`);
     }
 
     // Dynamic Window/Canvas Resizing
@@ -253,6 +267,10 @@
         changeScale(data.delta);
       } else if (data.type === 'scale_reset') {
         resetScale();
+      } else if (data.type === 'expression_reset') {
+        resetExpression();
+      } else if (data.type === 'get_scale') {
+        broadcastScale();
       } else if (data.type === 'canvas_size') {
         setCanvasDimensions(data.w, data.h);
       } else if (data.type === 'subtitle_toggle') {
@@ -306,20 +324,21 @@
         if (foundExpr) {
           e.preventDefault();
           if (foundExpr.key === '0') {
-            resetScale();
+            resetExpression();
           } else {
             applyExpression(foundExpr);
+            showToast(`🎭 표정: ${foundExpr.name}`);
           }
           return;
         }
 
-        // 2. Scale adjustment by 0.1
+        // 2. Scale adjustment by 0.2
         if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd' || e.code === 'Equal') {
           e.preventDefault();
-          changeScale(0.1);
+          changeScale(0.2);
         } else if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract' || e.code === 'Minus') {
           e.preventDefault();
-          changeScale(-0.1);
+          changeScale(-0.2);
         }
         // 3. Canvas boundary adjustment by 50px
         else if (e.key === ']' || e.code === 'BracketRight') {
