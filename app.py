@@ -80,12 +80,51 @@ user32.SendMessageW.restype = ctypes.c_ssize_t
 class POINT(ctypes.Structure):
     _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
 
+settings_window = None
+
 class TrackerApi:
     def __init__(self):
         self.hwnd = None
 
     def set_hwnd(self, hwnd):
         self.hwnd = hwnd
+
+    def open_settings(self):
+        global settings_window
+        log_msg("open_settings requested")
+        if settings_window is None:
+            try:
+                settings_window = webview.create_window(
+                    "🌱 즌다몬 환경설정",
+                    url="http://127.0.0.1:8989/settings",
+                    width=450,
+                    height=660,
+                    resizable=False,
+                    on_top=True
+                )
+                def on_settings_closed():
+                    global settings_window
+                    log_msg("settings_window closed")
+                    settings_window = None
+                settings_window.events.closed += on_settings_closed
+                return True
+            except Exception as e:
+                log_msg(f"create settings_window error: {e}")
+                return False
+        else:
+            try:
+                import webview.platforms.winforms as wf
+                from System import Action
+                inst = wf.BrowserView.instances.get(settings_window.uid)
+                if inst:
+                    hwnd = inst.Handle.ToInt64()
+                    user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                    user32.SetForegroundWindow(hwnd)
+                    inst.Invoke(Action(lambda: (inst.BringToFront(), inst.Activate())))
+                    return True
+            except Exception as e:
+                log_msg(f"activate settings_window error: {e}")
+            return True
 
     def start_drag(self):
         if self.hwnd and user32.IsWindow(self.hwnd):
@@ -279,6 +318,17 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None):
 def index():
     response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
     return static_file("index.html", root=APP_DIR)
+
+@app.route("/settings")
+def serve_settings():
+    response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
+    return static_file("settings.html", root=APP_DIR)
+
+@app.route("/api/open_settings", method=["GET", "POST"])
+def api_open_settings():
+    response.content_type = "application/json"
+    res = tracker_api.open_settings()
+    return json.dumps({"success": bool(res)})
 
 
 @app.route("/static/<filename:path>")

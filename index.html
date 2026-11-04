@@ -27,7 +27,7 @@
       cursor: grabbing;
     }
 
-    /* Zundamon Themed Subtitle - Clean Text Only (No Box Background) */
+    /* Subtitle - Clean Text Only with Soft Drop Shadow */
     #subtitle {
       position: absolute;
       bottom: 12px;
@@ -41,8 +41,6 @@
       line-height: 1.4;
       padding: 4px 8px;
       border: none;
-      border-radius: 0;
-      box-shadow: none;
       text-align: center;
       word-break: keep-all;
       pointer-events: none;
@@ -58,7 +56,7 @@
       transform: translateY(0);
     }
 
-    /* Expression Toast Notification */
+    /* Toast Notification */
     #toast {
       position: absolute;
       top: 14px;
@@ -83,224 +81,6 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-
-    /* Quick Settings Trigger Button */
-    #btn-settings {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: rgba(10, 26, 14, 0.75);
-      color: #86EFAC;
-      border: 1px solid rgba(74, 222, 128, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 14px;
-      z-index: 30;
-      opacity: 0.35;
-      transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
-    }
-    #btn-settings:hover {
-      opacity: 1;
-      color: #4ADE80;
-      background: rgba(10, 26, 14, 0.95);
-      border-color: #4ADE80;
-      box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
-    }
-
-
-
-    /* Zundamon Themed Settings Modal Panel */
-    #settings-modal {
-      position: absolute;
-      top: 45px;
-      right: 12px;
-      width: 300px;
-      max-height: calc(100vh - 70px);
-      overflow-y: auto;
-      background: rgba(10, 26, 14, 0.96);
-      border: 1px solid rgba(74, 222, 128, 0.55);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75), 0 0 16px rgba(34, 197, 94, 0.25);
-      color: #F0FDF4;
-      font-family: 'Malgun Gothic', 'Segoe UI', sans-serif;
-      font-size: 12px;
-      z-index: 40;
-      display: none;
-      animation: fadeIn 0.15s ease-out;
-    }
-    #settings-modal::-webkit-scrollbar {
-      width: 4px;
-    }
-    #settings-modal::-webkit-scrollbar-thumb {
-      background: rgba(74, 222, 128, 0.4);
-      border-radius: 4px;
-    }
-    #settings-modal.open {
-      display: block;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .modal-title {
-      font-weight: 700;
-      font-size: 13px;
-      color: #4ADE80;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(74, 222, 128, 0.25);
-      padding-bottom: 6px;
-    }
-    .modal-title .close-btn {
-      cursor: pointer;
-      color: #86EFAC;
-      font-size: 15px;
-    }
-    .modal-title .close-btn:hover {
-      color: #EF4444;
-    }
-    .modal-section {
-      margin-bottom: 13px;
-    }
-    .modal-label {
-      color: #86EFAC;
-      margin-bottom: 6px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .preset-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 5px;
-      margin-bottom: 8px;
-    }
-    .expr-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-    }
-    .btn-preset, .btn-expr {
-      background: rgba(20, 48, 28, 0.85);
-      border: 1px solid rgba(74, 222, 128, 0.3);
-      color: #DCFCE7;
-      padding: 5px 6px;
-      border-radius: 6px;
-      font-size: 11px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .btn-preset:hover, .btn-expr:hover {
-      background: rgba(34, 197, 94, 0.35);
-      border-color: #4ADE80;
-      color: #FFFFFF;
-      box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
-    }
-    .custom-inputs {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .custom-inputs input {
-      width: 70px;
-      background: rgba(20, 48, 28, 0.9);
-      border: 1px solid rgba(74, 222, 128, 0.4);
-      color: #F0FDF4;
-      padding: 4px 6px;
-      border-radius: 6px;
-      font-size: 11px;
-      text-align: center;
-    }
-    .custom-inputs input:focus {
-      outline: none;
-      border-color: #4ADE80;
-      box-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
-    }
-    .btn-apply {
-      background: #16A34A;
-      color: #FFFFFF;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      flex: 1;
-      transition: background 0.15s;
-    }
-    .btn-apply:hover {
-      background: #22C55E;
-      box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
-    }
-    .hint-box {
-      background: rgba(20, 48, 28, 0.6);
-      border-left: 3px solid #4ADE80;
-      padding: 7px 9px;
-      font-size: 11px;
-      color: #D1FAE5;
-      line-height: 1.45;
-      border-radius: 0 6px 6px 0;
-    }
-    .hint-box code {
-      color: #86EFAC;
-      font-weight: 700;
-    }
-    .btn-toggle {
-      background: rgba(20, 48, 28, 0.85);
-      border: 1px solid rgba(74, 222, 128, 0.4);
-      color: #86EFAC;
-      padding: 3px 12px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-toggle.active {
-      background: #16A34A;
-      color: #FFFFFF;
-      box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
-      border-color: #4ADE80;
-    }
-    .btn-toggle.off {
-      background: rgba(40, 40, 40, 0.85);
-      color: #9CA3AF;
-      border-color: rgba(156, 163, 175, 0.3);
-      box-shadow: none;
-    }
-    .btn-sub-size {
-      background: rgba(20, 48, 28, 0.85);
-      border: 1px solid rgba(74, 222, 128, 0.3);
-      color: #DCFCE7;
-      padding: 4px 2px;
-      border-radius: 6px;
-      font-size: 11px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-    }
-    .btn-sub-size:hover {
-      background: rgba(34, 197, 94, 0.35);
-      border-color: #4ADE80;
-    }
-    .btn-sub-size.active {
-      background: #16A34A;
-      color: #FFFFFF;
-      border-color: #4ADE80;
-      font-weight: 700;
-      box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
-    }
   </style>
   <script src="/static/live2dcubismcore.min.js"></script>
   <script src="/static/pixi.min.js"></script>
@@ -308,68 +88,6 @@
 </head>
 <body>
   <div id="toast"></div>
-
-  <div id="settings-modal">
-    <div class="modal-title">
-      <span>🌱 즌다몬 설정</span>
-      <span class="close-btn" id="modal-close">&times;</span>
-    </div>
-
-    <!-- Expressions Section -->
-    <div class="modal-section">
-      <div class="modal-label">표정 변경 (단축키 Ctrl + 1~9)</div>
-      <div class="expr-grid" id="expr-buttons"></div>
-    </div>
-
-    <!-- Canvas Size Section -->
-    <div class="modal-section">
-      <div class="modal-label">캔버스 크기 프리셋</div>
-      <div class="preset-grid">
-        <div class="btn-preset" data-w="420" data-h="580">콤팩트 (420×580)</div>
-        <div class="btn-preset" data-w="560" data-h="750">기본 (560×750)</div>
-        <div class="btn-preset" data-w="700" data-h="920">대형 (700×920)</div>
-        <div class="btn-preset" data-w="850" data-h="1100">초대형 (850×1100)</div>
-      </div>
-      <div class="custom-inputs">
-        <input type="number" id="inp-w" placeholder="너비(W)" min="280" max="1920">
-        <span>×</span>
-        <input type="number" id="inp-h" placeholder="높이(H)" min="350" max="1440">
-        <button class="btn-apply" id="btn-apply-size">적용</button>
-      </div>
-    </div>
-
-    <!-- Subtitle Settings Section -->
-    <div class="modal-section">
-      <div class="modal-label" style="display: flex; justify-content: space-between; align-items: center;">
-        <span>💬 자막바 표시 (ON / OFF)</span>
-        <button id="btn-toggle-sub" class="btn-toggle active" type="button">ON</button>
-      </div>
-      <div style="margin-top: 7px;">
-        <div class="modal-label" style="font-size: 10px; color: #86EFAC;">자막 크기 프리셋</div>
-        <div class="preset-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 6px;">
-          <div class="btn-sub-size" data-size="12">작게 (12)</div>
-          <div class="btn-sub-size active" data-size="14">기본 (14)</div>
-          <div class="btn-sub-size" data-size="17">크게 (17)</div>
-          <div class="btn-sub-size" data-size="20">특대 (20)</div>
-        </div>
-        <div class="custom-inputs" style="align-items: center;">
-          <input type="range" id="sub-size-slider" min="11" max="26" value="14" style="flex: 1; accent-color: #22C55E; cursor: pointer;">
-          <span id="sub-size-val" style="font-size: 11px; color: #86EFAC; width: 36px; text-align: right; font-weight: 600;">14px</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="hint-box">
-      <strong>단축키 가이드:</strong><br>
-      • <code>Ctrl + 1~9</code> : 표정 변경<br>
-      • <code>Ctrl + / -</code> : 캐릭터 배율 0.1씩 조절<br>
-      • <code>Ctrl + [ / ]</code> : 캔버스 ±50px 조절<br>
-      • <code>Ctrl + P / ,</code> : 설정창 열기/닫기<br>
-      • <code>Ctrl + 0</code> : 배율 및 표정 초기화<br>
-      • <code>마우스 좌클릭 드래그</code> : 화면 이동
-    </div>
-  </div>
-
   <canvas id="canvas"></canvas>
   <div id="subtitle"></div>
 
@@ -377,17 +95,6 @@
     const canvas = document.getElementById('canvas');
     const subtitleEl = document.getElementById('subtitle');
     const toastEl = document.getElementById('toast');
-    const settingsModal = document.getElementById('settings-modal');
-    const btnSettings = document.getElementById('btn-settings');
-    const modalClose = document.getElementById('modal-close');
-    const inpW = document.getElementById('inp-w');
-    const inpH = document.getElementById('inp-h');
-    const btnApplySize = document.getElementById('btn-apply-size');
-    const exprButtonsContainer = document.getElementById('expr-buttons');
-    const btnToggleSub = document.getElementById('btn-toggle-sub');
-    const subSizeSlider = document.getElementById('sub-size-slider');
-    const subSizeVal = document.getElementById('sub-size-val');
-    const btnSubSizes = document.querySelectorAll('.btn-sub-size');
 
     // Subtitle Settings State
     let isSubtitleEnabled = localStorage.getItem('zundamon_sub_enabled') !== '0';
@@ -395,33 +102,12 @@
     if (isNaN(currentSubtitleSize) || currentSubtitleSize < 10) currentSubtitleSize = 14;
 
     function applySubtitleSettings(saveServer = true) {
-      if (btnToggleSub) {
-        if (isSubtitleEnabled) {
-          btnToggleSub.textContent = 'ON';
-          btnToggleSub.className = 'btn-toggle active';
-        } else {
-          btnToggleSub.textContent = 'OFF';
-          btnToggleSub.className = 'btn-toggle off';
-          subtitleEl.classList.remove('show');
-        }
+      if (!isSubtitleEnabled && subtitleEl) {
+        subtitleEl.classList.remove('show');
       }
-
-      subtitleEl.style.fontSize = currentSubtitleSize + 'px';
-      subtitleEl.style.padding = '4px 8px';
-
-      if (subSizeSlider) subSizeSlider.value = currentSubtitleSize;
-      if (subSizeVal) subSizeVal.textContent = currentSubtitleSize + 'px';
-
-      if (btnSubSizes) {
-        btnSubSizes.forEach(btn => {
-          if (parseInt(btn.dataset.size, 10) === currentSubtitleSize) {
-            btn.classList.add('active');
-          } else {
-            btn.classList.remove('active');
-          }
-        });
+      if (subtitleEl) {
+        subtitleEl.style.fontSize = currentSubtitleSize + 'px';
       }
-
       localStorage.setItem('zundamon_sub_enabled', isSubtitleEnabled ? '1' : '0');
       localStorage.setItem('zundamon_sub_size', currentSubtitleSize.toString());
 
@@ -439,46 +125,13 @@
 
     let subPreviewTimeout = null;
     function previewSubtitle() {
-      if (!isSubtitleEnabled) return;
+      if (!isSubtitleEnabled || !subtitleEl) return;
       subtitleEl.textContent = `🌱 보쿠는 즌다몬인 것이다! (${currentSubtitleSize}px)`;
       subtitleEl.classList.add('show');
       if (subPreviewTimeout) clearTimeout(subPreviewTimeout);
       subPreviewTimeout = setTimeout(() => {
         if (!isSpeaking) subtitleEl.classList.remove('show');
       }, 2000);
-    }
-
-    if (btnToggleSub) {
-      btnToggleSub.addEventListener('click', (e) => {
-        e.stopPropagation();
-        isSubtitleEnabled = !isSubtitleEnabled;
-        applySubtitleSettings(true);
-        if (isSubtitleEnabled) {
-          showToast('💬 자막바: ON');
-          previewSubtitle();
-        } else {
-          showToast('💬 자막바: OFF');
-        }
-      });
-    }
-
-    if (subSizeSlider) {
-      subSizeSlider.addEventListener('input', (e) => {
-        currentSubtitleSize = parseInt(e.target.value, 10);
-        applySubtitleSettings(true);
-        previewSubtitle();
-      });
-    }
-
-    if (btnSubSizes) {
-      btnSubSizes.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          currentSubtitleSize = parseInt(btn.dataset.size, 10);
-          applySubtitleSettings(true);
-          previewSubtitle();
-        });
-      });
     }
 
     // Initial subtitle state
@@ -531,18 +184,6 @@
       } catch(e) {}
     }
 
-    // Populate Expression Buttons in Settings Modal
-    expressionsList.slice(0, 9).forEach(expr => {
-      const btn = document.createElement('div');
-      btn.className = 'btn-expr';
-      btn.innerHTML = `${expr.key}. ${expr.icon} ${expr.name}`;
-      btn.title = `Ctrl + ${expr.key} : ${expr.name}`;
-      btn.addEventListener('click', () => {
-        applyExpression(expr);
-      });
-      exprButtonsContainer.appendChild(btn);
-    });
-
     // Zoom/scale level persisted in localStorage
     let currentScaleMultiplier = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
 
@@ -577,8 +218,6 @@
     function setCanvasDimensions(w, h) {
       w = Math.max(280, Math.min(1920, parseInt(w) || 560));
       h = Math.max(350, Math.min(1440, parseInt(h) || 750));
-      inpW.value = w;
-      inpH.value = h;
 
       if (window.pywebview && window.pywebview.api && window.pywebview.api.resize_window) {
         window.pywebview.api.resize_window(w, h);
@@ -593,12 +232,44 @@
       showToast(`📐 캔버스: ${w} × ${h}px`);
     }
 
+    // Open Separate Settings Window
+    function openSettingsWindow() {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.open_settings) {
+        window.pywebview.api.open_settings();
+      } else {
+        fetch('/api/open_settings').catch(() => {});
+      }
+    }
+
+    // Cross-Window Real-time Communication Channel
+    const bc = new BroadcastChannel('zundamon_channel');
+    bc.onmessage = (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.type === 'expression') {
+        applyExpression(data.expr);
+        showToast(`🎭 표정: ${data.expr.name}`);
+      } else if (data.type === 'scale_delta') {
+        changeScale(data.delta);
+      } else if (data.type === 'scale_reset') {
+        resetScale();
+      } else if (data.type === 'canvas_size') {
+        setCanvasDimensions(data.w, data.h);
+      } else if (data.type === 'subtitle_toggle') {
+        isSubtitleEnabled = !!data.enabled;
+        applySubtitleSettings(false);
+        showToast(isSubtitleEnabled ? '💬 자막: ON' : '💬 자막: OFF');
+      } else if (data.type === 'subtitle_size') {
+        currentSubtitleSize = data.size;
+        applySubtitleSettings(false);
+        previewSubtitle();
+      }
+    };
+
     // Load initial config from server
     fetch('/api/config')
       .then(r => r.json())
       .then(cfg => {
-        inpW.value = cfg.win_w || window.innerWidth;
-        inpH.value = cfg.win_h || window.innerHeight;
         if (typeof cfg.subtitle_enabled === 'boolean') {
           isSubtitleEnabled = cfg.subtitle_enabled;
         }
@@ -607,42 +278,7 @@
         }
         applySubtitleSettings(false);
       })
-      .catch(() => {
-        inpW.value = window.innerWidth;
-        inpH.value = window.innerHeight;
-      });
-
-    // Settings Modal Toggle (Shortcut Ctrl + P / Ctrl + , or via button if present)
-    if (btnSettings) {
-      btnSettings.addEventListener('click', (e) => {
-        e.stopPropagation();
-        settingsModal.classList.toggle('open');
-        inpW.value = window.innerWidth;
-        inpH.value = window.innerHeight;
-      });
-    }
-
-    modalClose.addEventListener('click', () => {
-      settingsModal.classList.remove('open');
-    });
-
-    document.querySelectorAll('.btn-preset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        setCanvasDimensions(btn.dataset.w, btn.dataset.h);
-        settingsModal.classList.remove('open');
-      });
-    });
-
-    btnApplySize.addEventListener('click', () => {
-      setCanvasDimensions(inpW.value, inpH.value);
-      settingsModal.classList.remove('open');
-    });
-
-    window.addEventListener('click', (e) => {
-      if (settingsModal && !settingsModal.contains(e.target) && (!btnSettings || e.target !== btnSettings)) {
-        settingsModal.classList.remove('open');
-      }
-    });
+      .catch(() => {});
 
     // Load Zundamon Model
     PIXI.live2d.Live2DModel.from('/model/zundamon.model3.json', { autoInteract: false })
@@ -653,7 +289,8 @@
         resizeModel();
         window.addEventListener('resize', resizeModel);
 
-        console.log('Zundamon Live2D loaded successfully!');
+        applyExpression(expressionsList[0]);
+        console.log('Zundamon Live2D Model loaded successfully!');
         fetch('/api/model_loaded').catch(() => {});
       })
       .catch(err => {
@@ -661,7 +298,7 @@
         fetch('/api/model_error?err=' + encodeURIComponent(err.toString())).catch(() => {});
       });
 
-    // Keyboard Shortcuts: Ctrl + 1~9, Ctrl +/-, Ctrl [/]
+    // Keyboard Shortcuts: Ctrl + 1~9, Ctrl +/-, Ctrl [/], Ctrl + P
     window.addEventListener('keydown', (e) => {
       if (e.ctrlKey) {
         // 1. Expressions: Ctrl + 1 ~ 9 and Ctrl + 0
@@ -691,18 +328,22 @@
         } else if (e.key === '[' || e.code === 'BracketLeft') {
           e.preventDefault();
           setCanvasDimensions(window.innerWidth - 50, window.innerHeight - 50);
-        } else if (e.key === ',' || e.key === 'p' || e.key === 'P') {
+        }
+        // 4. Open Settings Window
+        else if (e.key === ',' || e.key === 'p' || e.key === 'P') {
           e.preventDefault();
-          settingsModal.classList.toggle('open');
-        } else if (e.key === 'u' || e.key === 'U') {
+          openSettingsWindow();
+        }
+        // 5. Subtitle Toggle
+        else if (e.key === 'u' || e.key === 'U') {
           e.preventDefault();
           isSubtitleEnabled = !isSubtitleEnabled;
           applySubtitleSettings(true);
           if (isSubtitleEnabled) {
-            showToast('💬 자막바: ON');
+            showToast('💬 자막: ON');
             previewSubtitle();
           } else {
-            showToast('💬 자막바: OFF');
+            showToast('💬 자막: OFF');
           }
         }
       }
@@ -824,7 +465,7 @@
       e.preventDefault();
     });
 
-    // Global Mouse Tracking with Forward (정면) Default
+    // Global Mouse Tracking with Forward Default
     let isTrackingActive = false;
     async function startGlobalMouseTracking() {
       if (isTrackingActive) return;
