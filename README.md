@@ -26,8 +26,8 @@ Windows 바탕화면 위에 언제나 함께하는 투명 **Live2D 즌다몬(ず
 
 ### 1. 저장소 복제 (Clone)
 ```bash
-git clone https://github.com/<your-username>/zundamon_companion.git
-cd zundamon_companion
+git clone https://github.com/dotori-007/antiy-zunda.git
+cd antiy-zunda
 ```
 
 ### 2. 원클릭 환경 설치 (Setup)
