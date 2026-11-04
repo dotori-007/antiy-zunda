@@ -32,5 +32,5 @@ description: 즌다몬(Zundamon) 모드를 활성화합니다. 즌다몬의 한�
 * **즌다몬 음성 출력 (Live2D 립싱크 연동)**:
   사용자에게 답변할 때, 핵심 멘트(1문장)를 한국어로 전달하면 내부에서 음소 변환(G2P)을 거쳐 즌다몬 음성으로 초고속 재생:
   ```powershell
-  & python "{COMPANION_DIR}\speak.py" "알겠는 것이다! 이제부터 '~인 것이다'로 말하는 것이다!"
+  & {PYTHON_EXE} "{COMPANION_DIR}\speak.py" "알겠는 것이다! 이제부터 '~인 것이다'로 말하는 것이다!"
   ```

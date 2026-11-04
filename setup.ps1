@@ -1,4 +1,4 @@
-﻿# Zundamon Companion Setup Script
+# Zundamon Companion Setup Script
 $ErrorActionPreference = "Continue"
 
 $companionDir = $PSScriptRoot
@@ -8,11 +8,26 @@ Write-Host "====================================================================
 Write-Host "Path: $companionDir"
 Write-Host ""
 
-# 1. Python Check
+# 1. Python Check & Selection
 Write-Host "[1/4] Checking Python environment..." -ForegroundColor Cyan
+$pythonCmd = "python"
+$pyPaths = & where.exe python 2>&1
+foreach ($p in $pyPaths) {
+    if ($p -and ($p -notmatch "WindowsApps") -and (Test-Path $p.Trim())) {
+        $pythonCmd = $p.Trim()
+        break
+    }
+}
+if ($pythonCmd -eq "python") {
+    try {
+        $testPy = & py -3 --version 2>&1
+        if ($LASTEXITCODE -eq 0) { $pythonCmd = "py -3" }
+    } catch {}
+}
+
 try {
-    $pyVer = & python --version 2>&1
-    Write-Host "[OK] Detected: $pyVer" -ForegroundColor Green
+    $pyVer = & $pythonCmd --version 2>&1
+    Write-Host "[OK] Detected: $pyVer (using: $pythonCmd)" -ForegroundColor Green
 } catch {
     Write-Host "[ERROR] Python is not installed or not in PATH!" -ForegroundColor Red
     exit 1
@@ -21,7 +36,7 @@ Write-Host ""
 
 # 2. Pip Dependencies
 Write-Host "[2/4] Installing dependencies from requirements.txt..." -ForegroundColor Cyan
-& python -m pip install -r "$companionDir\requirements.txt"
+& $pythonCmd -m pip install -r "$companionDir\requirements.txt"
 Write-Host "[OK] Dependencies ready." -ForegroundColor Green
 Write-Host ""
 
@@ -51,6 +66,8 @@ $destPath = Join-Path $skillDestDir "SKILL.md"
 
 if (Test-Path $templatePath) {
     $content = Get-Content -Path $templatePath -Raw -Encoding UTF8
+    $pyExecStr = if ($pythonCmd.Contains(" ")) { "`"$pythonCmd`"" } else { $pythonCmd }
+    $content = $content.Replace("{PYTHON_EXE}", $pyExecStr)
     $content = $content.Replace("{COMPANION_DIR}", $companionDir)
     [System.IO.File]::WriteAllText($destPath, $content, [System.Text.Encoding]::UTF8)
     Write-Host "[OK] Antigravity Skill registered: $destPath" -ForegroundColor Green
@@ -62,7 +79,7 @@ Write-Host ""
 # 5. VOICEVOX Check
 Write-Host "[Check] Checking VOICEVOX engine..." -ForegroundColor Cyan
 try {
-    $engine = & python -c "import app; print(app.find_voicevox_engine() or '')" 2>&1
+    $engine = & $pythonCmd -c "import app; print(app.find_voicevox_engine() or '')" 2>&1
     if ($engine -and (Test-Path $engine.Trim())) {
         Write-Host "[OK] VOICEVOX Engine detected: $engine" -ForegroundColor Green
     } else {
