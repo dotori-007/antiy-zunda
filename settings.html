@@ -3,8 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌱 즌다몬 환경설정</title>
+  <title>VOICEVOX - 즌다몬 컴패니언 설정</title>
   <style>
+    :root {
+      --vv-bg: #242626;
+      --vv-bg-alt: #1E2020;
+      --vv-surface: #2B2E2E;
+      --vv-surface-high: #343838;
+      --vv-border: rgba(255, 255, 255, 0.14);
+      --vv-border-subtle: rgba(255, 255, 255, 0.08);
+      --vv-control: #3D4242;
+      --vv-control-hover: #4C5252;
+      --vv-control-active: #5B6262;
+      --vv-primary: #A5D4AD;
+      --vv-primary-bright: #84CC16;
+      --vv-primary-dark: #2F4F35;
+      --vv-accent-orange: #EE7800;
+      --vv-text: #FFFFFF;
+      --vv-text-sub: rgba(255, 255, 255, 0.65);
+      --vv-text-dim: rgba(255, 255, 255, 0.4);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -13,488 +32,754 @@
     }
 
     body {
-      background-color: #0F172A;
-      color: #F8FAFC;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
-      padding: 18px;
-      font-size: 13px;
+      background-color: var(--vv-bg);
+      color: var(--vv-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Pretendard", "Noto Sans KR", "Meiryo", sans-serif;
+      font-size: 12px;
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
       overflow-y: auto;
     }
 
     body::-webkit-scrollbar {
       width: 6px;
     }
+    body::-webkit-scrollbar-track {
+      background: var(--vv-bg);
+    }
     body::-webkit-scrollbar-thumb {
-      background: #334155;
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 3px;
     }
+    body::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
 
-    /* Header */
-    .header {
+    /* VOICEVOX Header Bar */
+    .vv-header {
+      background: var(--vv-bg-alt);
+      border-bottom: 1px solid var(--vv-border);
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-bottom: 14px;
-      border-bottom: 1px solid #1E293B;
-      margin-bottom: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
 
-    .header-title {
+    .vv-header-left {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 16px;
-      font-weight: 700;
-      color: #4ADE80;
+      gap: 10px;
     }
 
-    .header-badge {
-      background: rgba(74, 222, 128, 0.15);
-      color: #4ADE80;
-      padding: 3px 8px;
-      border-radius: 12px;
+    .vv-logo-badge {
+      background: var(--vv-primary-dark);
+      color: var(--vv-primary);
+      border: 1px solid var(--vv-primary);
+      font-weight: 900;
       font-size: 11px;
-      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 2px 7px;
+      border-radius: 4px;
     }
 
-    /* Cards */
-    .card {
-      background: #1E293B;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-
-    .card-title {
+    .vv-header-title {
       font-size: 13px;
       font-weight: 700;
-      color: #94A3B8;
-      margin-bottom: 10px;
+      color: var(--vv-text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .vv-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--vv-text-sub);
+    }
+
+    .vv-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--vv-primary-bright);
+      box-shadow: 0 0 6px var(--vv-primary-bright);
+    }
+
+    /* Container */
+    .vv-container {
+      padding: 14px 16px 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Character Profile Banner (VOICEVOX Style) */
+    .vv-speaker-card {
+      background: var(--vv-surface);
+      border: 1px solid var(--vv-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .vv-avatar-wrapper {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      flex-shrink: 0;
+    }
+
+    .vv-avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--vv-bg-alt);
+      border: 2px solid var(--vv-primary);
+    }
+
+    .vv-avatar-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      background: var(--vv-primary-bright);
+      color: #1A2E05;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 6px;
+      border: 1px solid var(--vv-surface);
+    }
+
+    .vv-speaker-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .vv-speaker-name-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .card-title-hint {
-      font-size: 11px;
-      color: #64748B;
-      font-weight: normal;
+    .vv-speaker-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: 0.2px;
     }
 
-    /* Expressions Grid */
-    .expr-grid {
+    .vv-speaker-cv {
+      font-size: 11px;
+      color: var(--vv-text-sub);
+    }
+
+    /* Style / Expression Pill Chips */
+    .vv-panel {
+      background: var(--vv-surface);
+      border: 1px solid var(--vv-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .vv-panel-header {
+      background: rgba(0, 0, 0, 0.15);
+      padding: 9px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--vv-primary);
+      border-bottom: 1px solid var(--vv-border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .vv-panel-body {
+      padding: 12px 14px;
+    }
+
+    .vv-style-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       margin-bottom: 8px;
     }
 
-    .btn-expr {
-      background: #0F172A;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 7px 4px;
-      color: #E2E8F0;
-      font-size: 12px;
+    .vv-style-chip {
+      background: var(--vv-control);
+      border: 1px solid var(--vv-border);
+      color: var(--vv-text);
+      padding: 7px 6px;
+      border-radius: 4px;
+      font-size: 11px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      transition: all 0.15s;
+      gap: 5px;
+      transition: all 0.12s ease;
     }
 
-    .btn-expr:hover {
-      background: #1E3A8A;
-      border-color: #60A5FA;
+    .vv-style-chip:hover {
+      background: var(--vv-control-hover);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .vv-style-chip.active {
+      background: var(--vv-primary-dark);
+      border-color: var(--vv-primary);
       color: #FFFFFF;
-      transform: translateY(-1px);
+      font-weight: 700;
     }
 
-    .btn-expr:active {
-      transform: translateY(0);
-    }
-
-    .btn-expr.active {
-      background: rgba(74, 222, 128, 0.25);
-      border-color: #4ADE80;
-      color: #4ADE80;
-      font-weight: bold;
-    }
-
-    .btn-reset-expr {
-      width: 100%;
-      background: #0F172A;
-      border: 1px dashed #475569;
-      border-radius: 6px;
-      padding: 7px;
-      color: #94A3B8;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-reset-expr:hover {
-      border-color: #4ADE80;
-      color: #4ADE80;
-      background: rgba(74, 222, 128, 0.1);
-    }
-
-    /* Presets & Buttons */
-    .btn-group {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .btn-chip {
-      flex: 1;
-      background: #0F172A;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 7px 4px;
-      color: #CBD5E1;
+    .vv-btn-subtle {
+      background: transparent;
+      border: 1px dashed var(--vv-border);
+      color: var(--vv-text-sub);
+      border-radius: 4px;
+      padding: 6px 10px;
       font-size: 11px;
       cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-    }
-
-    .btn-chip:hover {
-      background: #334155;
-      color: #FFFFFF;
-    }
-
-    .btn-chip.active {
-      background: #15803D;
-      border-color: #4ADE80;
-      color: #FFFFFF;
-      font-weight: bold;
-    }
-
-    /* Inputs */
-    .input-row {
+      width: 100%;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.12s;
     }
 
-    .input-box {
-      flex: 1;
-      background: #0F172A;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      padding: 7px 8px;
-      color: #FFFFFF;
-      font-size: 12px;
-      text-align: center;
+    .vv-btn-subtle:hover {
+      background: var(--vv-control);
+      color: var(--vv-primary);
+      border-color: var(--vv-primary);
     }
-    .input-box:focus {
+
+    /* VOICEVOX Signature Parameter Inspector Rows */
+    .vv-param-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .vv-param-row {
+      display: grid;
+      grid-template-columns: 88px 1fr 58px 28px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .vv-param-label {
+      font-size: 11px;
+      color: var(--vv-text-sub);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .vv-slider-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .vv-slider {
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--vv-bg-alt);
       outline: none;
-      border-color: #4ADE80;
-    }
-
-    .btn-action {
-      background: #16A34A;
-      color: #FFFFFF;
-      border: none;
-      border-radius: 6px;
-      padding: 7px 12px;
-      font-size: 12px;
-      font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s;
-    }
-    .btn-action:hover {
-      background: #22C55E;
+      accent-color: var(--vv-primary-bright);
     }
 
-    /* Toggle switch */
-    .toggle-row {
+    .vv-param-val {
+      background: var(--vv-bg-alt);
+      border: 1px solid var(--vv-border);
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-size: 11px;
+      color: #FFFFFF;
+      text-align: right;
+      font-family: monospace;
+      font-weight: 600;
+    }
+
+    .vv-btn-reset {
+      background: var(--vv-control);
+      border: 1px solid var(--vv-border);
+      color: var(--vv-text-sub);
+      border-radius: 4px;
+      width: 28px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.12s;
+    }
+
+    .vv-btn-reset:hover {
+      background: var(--vv-control-hover);
+      color: #FFFFFF;
+    }
+
+    /* Quick Preset Chips Row */
+    .vv-preset-row {
+      display: flex;
+      gap: 5px;
+      margin-top: 4px;
+      padding-left: 96px;
+    }
+
+    .vv-mini-chip {
+      background: var(--vv-control);
+      border: 1px solid var(--vv-border-subtle);
+      color: var(--vv-text-sub);
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .vv-mini-chip:hover {
+      background: var(--vv-control-hover);
+      color: #FFFFFF;
+    }
+
+    .vv-mini-chip.active {
+      background: var(--vv-primary-dark);
+      border-color: var(--vv-primary);
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    /* VOICEVOX Style Switch Toggle */
+    .vv-switch-container {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: var(--vv-bg-alt);
+      border: 1px solid var(--vv-border-subtle);
+      border-radius: 4px;
+      margin-top: 4px;
     }
 
-    .switch {
+    .vv-switch {
       position: relative;
       display: inline-block;
-      width: 44px;
-      height: 24px;
+      width: 38px;
+      height: 20px;
     }
-
-    .switch input {
+    .vv-switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
-
-    .slider-toggle {
+    .vv-switch-slider {
       position: absolute;
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #334155;
-      transition: .2s;
-      border-radius: 24px;
+      background-color: var(--vv-control);
+      transition: 0.2s;
+      border-radius: 20px;
+      border: 1px solid var(--vv-border);
     }
-
-    .slider-toggle:before {
+    .vv-switch-slider:before {
       position: absolute;
       content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
       background-color: white;
-      transition: .2s;
+      transition: 0.2s;
       border-radius: 50%;
     }
-
-    input:checked + .slider-toggle {
-      background-color: #22C55E;
+    input:checked + .vv-switch-slider {
+      background-color: var(--vv-primary-bright);
+      border-color: var(--vv-primary-bright);
+    }
+    input:checked + .vv-switch-slider:before {
+      transform: translateX(18px);
+      background-color: #1A2E05;
     }
 
-    input:checked + .slider-toggle:before {
-      transform: translateX(20px);
-    }
-
-    /* Subtitle Slider & Preview */
-    .range-slider {
-      width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: #334155;
-      outline: none;
-      accent-color: #4ADE80;
-      cursor: pointer;
-      margin: 8px 0;
-    }
-
-    .subtitle-preview-box {
-      background: #020617;
-      border: 1px dashed #334155;
-      border-radius: 6px;
-      padding: 14px 10px;
+    /* Subtitle Live Preview */
+    .vv-subtitle-preview {
+      background: #0D1111;
+      border: 1px dashed var(--vv-border);
+      border-radius: 4px;
+      padding: 10px;
       text-align: center;
       margin-top: 8px;
-      min-height: 48px;
+      min-height: 42px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .subtitle-preview-text {
+    .vv-subtitle-text {
       color: #7CFC00;
       font-weight: 700;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.6);
-      transition: font-size 0.15s;
+      transition: font-size 0.12s ease;
     }
 
-    /* Voice Test */
-    .voice-input-row {
+    /* VOICEVOX Script / Text Row (Editor Timeline Cell) */
+    .vv-cell-container {
+      background: var(--vv-surface);
+      border: 1px solid var(--vv-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .vv-script-box {
       display: flex;
-      gap: 6px;
-    }
-
-    .voice-input {
-      flex: 1;
-      background: #0F172A;
-      border: 1px solid #334155;
+      align-items: stretch;
+      background: var(--vv-bg-alt);
+      border: 1px solid var(--vv-border);
       border-radius: 6px;
-      padding: 8px 10px;
-      color: #FFFFFF;
-      font-size: 12px;
-      user-select: text;
-    }
-    .voice-input:focus {
-      outline: none;
-      border-color: #4ADE80;
+      overflow: hidden;
+      margin-top: 8px;
     }
 
-    /* Status Bar */
-    .status-bar {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #64748B;
-      padding-top: 6px;
-    }
-
-    .status-item {
+    .vv-btn-play {
+      background: var(--vv-primary-bright);
+      color: #1A2E05;
+      border: none;
+      width: 44px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      font-weight: 900;
+      transition: filter 0.15s, background 0.15s;
     }
 
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #22C55E;
+    .vv-btn-play:hover {
+      filter: brightness(1.1);
+    }
+
+    .vv-btn-play:active {
+      filter: brightness(0.95);
+    }
+
+    .vv-btn-play:disabled {
+      background: var(--vv-control);
+      color: var(--vv-text-dim);
+      cursor: not-allowed;
+    }
+
+    .vv-cell-num {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--vv-text-dim);
+      padding: 10px 8px;
+      font-family: monospace;
+      font-size: 11px;
+      border-right: 1px solid var(--vv-border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .vv-input-script {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 10px 12px;
+      color: #FFFFFF;
+      font-size: 13px;
+      outline: none;
+      user-select: text;
+      font-family: inherit;
+    }
+
+    .vv-input-script::placeholder {
+      color: var(--vv-text-dim);
+    }
+
+    /* Footer Info */
+    .vv-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--vv-text-dim);
+      padding: 0 4px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <div class="header">
-    <div class="header-title">
-      <span>🌱</span>
-      <span>즌다몬 환경설정</span>
+  <!-- Top VOICEVOX Header -->
+  <div class="vv-header">
+    <div class="vv-header-left">
+      <span class="vv-logo-badge">VOICEVOX</span>
+      <span class="vv-header-title">
+        <span>ずんだもん 컴패니언 설정</span>
+      </span>
     </div>
-    <div class="header-badge">실시간 연동 중</div>
-  </div>
-
-  <!-- 1. Expressions Card -->
-  <div class="card">
-    <div class="card-title">
-      <span>🎭 표정 제어</span>
-      <span class="card-title-hint">단축키 Ctrl + 1 ~ 9</span>
-    </div>
-    <div class="expr-grid" id="expr-grid"></div>
-    <button class="btn-reset-expr" id="btn-reset-expr">🌱 기본 표정 초기화 (Ctrl + 0)</button>
-  </div>
-
-  <!-- 2. Canvas Dimensions Card -->
-  <div class="card">
-    <div class="card-title">
-      <span>📐 캔버스 창 크기</span>
-      <span class="card-title-hint">단축키 Ctrl + [ / ]</span>
-    </div>
-    <div class="btn-group">
-      <button class="btn-chip" data-w="420" data-h="580">컴팩트 (420×580)</button>
-      <button class="btn-chip active" data-w="560" data-h="750">기본 (560×750)</button>
-      <button class="btn-chip" data-w="700" data-h="900">와이드 (700×900)</button>
-    </div>
-    <div class="input-row">
-      <input type="number" id="inp-w" class="input-box" value="560" min="280" max="1920" step="10" placeholder="너비">
-      <span style="color:#64748B">×</span>
-      <input type="number" id="inp-h" class="input-box" value="750" min="350" max="1440" step="10" placeholder="높이">
-      <button class="btn-action" id="btn-apply-size">적용</button>
+    <div class="vv-status-indicator">
+      <div class="vv-status-dot" id="status-dot"></div>
+      <span id="status-engine">연결 중...</span>
     </div>
   </div>
 
-  <!-- 3. Model Scale Card -->
-  <div class="card">
-    <div class="card-title">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span>🔍 캐릭터 배율 조절</span>
-        <span id="scale-val" style="font-size:11px; color:#4ADE80; font-weight:700">1.0x</span>
+  <div class="vv-container">
+
+    <!-- 1. Speaker Profile Banner -->
+    <div class="vv-speaker-card">
+      <div class="vv-avatar-wrapper">
+        <img class="vv-avatar-img" src="/static/vv_zundamon_icon.png" alt="Zundamon" onerror="this.src='/model/zundamon.2048/texture_00.png'">
+        <div class="vv-avatar-badge">ID: 3</div>
       </div>
-      <span class="card-title-hint">단축키 Ctrl + + / - (0.2 단위)</span>
-    </div>
-    <div class="btn-group">
-      <button class="btn-chip" id="btn-scale-down">➖ 축소 (-0.2)</button>
-      <button class="btn-chip" id="btn-scale-reset">1.0x 초기화</button>
-      <button class="btn-chip" id="btn-scale-up">➕ 확대 (+0.2)</button>
-    </div>
-  </div>
-
-  <!-- 4. Subtitle Settings Card -->
-  <div class="card">
-    <div class="card-title">
-      <span>💬 실시간 자막</span>
-      <span class="card-title-hint">단축키 Ctrl + U</span>
-    </div>
-    <div class="toggle-row">
-      <span style="font-size:12px; color:#E2E8F0">자막 화면 표시</span>
-      <label class="switch">
-        <input type="checkbox" id="chk-subtitle" checked>
-        <span class="slider-toggle"></span>
-      </label>
-    </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-      <span style="font-size:11px; color:#94A3B8">글자 크기</span>
-      <span id="sub-size-val" style="font-size:11px; color:#4ADE80; font-weight:700">14px</span>
-    </div>
-    <input type="range" id="sub-size-slider" class="range-slider" min="10" max="36" value="14">
-    <div class="btn-group" style="margin-bottom:0">
-      <button class="btn-chip btn-sub-chip" data-size="12">12px</button>
-      <button class="btn-chip btn-sub-chip active" data-size="14">14px</button>
-      <button class="btn-chip btn-sub-chip" data-size="17">17px</button>
-      <button class="btn-chip btn-sub-chip" data-size="20">20px</button>
-    </div>
-    <div class="subtitle-preview-box">
-      <div id="sub-preview" class="subtitle-preview-text" style="font-size: 14px;">
-        안녕인 것이다! 즌다몬인 것이다!
+      <div class="vv-speaker-info">
+        <div class="vv-speaker-name-row">
+          <div class="vv-speaker-name">ずんだもん (Zundamon)</div>
+          <span style="font-size: 10px; color: var(--vv-primary); font-weight: 600;">Cubism 4</span>
+        </div>
+        <div class="vv-speaker-cv">CV: 伊藤ゆいな / 東北ずん子プロジェクト</div>
       </div>
     </div>
-  </div>
 
-  <!-- 5. Voice Speech Test Card -->
-  <div class="card">
-    <div class="card-title">
-      <span>🗣️ 음성 발화 테스트</span>
-      <span class="card-title-hint">VOICEVOX 립싱크</span>
+    <!-- 2. Styles / Expressions (VOICEVOX Style Pills) -->
+    <div class="vv-panel">
+      <div class="vv-panel-header">
+        <span>🎭 캐릭터 스타일 / 표정 제어</span>
+        <span style="font-size:10px; color:var(--vv-text-dim);">단축키 Ctrl + 1 ~ 9</span>
+      </div>
+      <div class="vv-panel-body">
+        <div class="vv-style-grid" id="style-grid"></div>
+        <button class="vv-btn-subtle" id="btn-reset-expr">
+          <span>↺</span>
+          <span>기본 스타일로 초기화 (Ctrl + 0)</span>
+        </button>
+      </div>
     </div>
-    <div class="voice-input-row">
-      <input type="text" id="inp-speech" class="voice-input" value="보쿠는 즌다몬인 것이다! 잘 부탁하는 것이다!" placeholder="테스트할 대사를 입력하세요">
-      <button class="btn-action" id="btn-speak">말하기 🎙️</button>
-    </div>
-  </div>
 
-  <!-- Status Bar -->
-  <div class="status-bar">
-    <div class="status-item">
-      <div class="status-dot"></div>
-      <span id="status-model">Live2D 정상</span>
+    <!-- 3. VOICEVOX Parameter Inspector -->
+    <div class="vv-panel">
+      <div class="vv-panel-header">
+        <span>🎛️ 디스플레이 & 모델 파라미터</span>
+        <span style="font-size:10px; color:var(--vv-text-dim);">실시간 동기화 (Sync)</span>
+      </div>
+      <div class="vv-panel-body">
+        <div class="vv-param-list">
+
+          <!-- Scale (0.2 Step) -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">배율 (Scale)</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-scale" class="vv-slider" min="0.4" max="3.0" step="0.2" value="1.0">
+              </div>
+              <div class="vv-param-val" id="val-scale">1.0x</div>
+              <button class="vv-btn-reset" id="btn-reset-scale" title="1.0x 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip" id="btn-scale-step-down">-0.2 축소</button>
+              <button class="vv-mini-chip" id="btn-scale-step-up">+0.2 확대</button>
+              <span style="margin-left:auto; font-size:10px; color:var(--vv-text-dim);">단축키: Ctrl + / -</span>
+            </div>
+          </div>
+
+          <!-- Canvas Width -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">너비 (Width)</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-w" class="vv-slider" min="280" max="1920" step="10" value="560">
+              </div>
+              <div class="vv-param-val" id="val-w">560px</div>
+              <button class="vv-btn-reset" id="btn-reset-w" title="기본 560px 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip chip-w" data-w="420">420px</button>
+              <button class="vv-mini-chip chip-w active" data-w="560">560px</button>
+              <button class="vv-mini-chip chip-w" data-w="700">700px</button>
+              <button class="vv-mini-chip chip-w" data-w="850">850px</button>
+            </div>
+          </div>
+
+          <!-- Canvas Height -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">높이 (Height)</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-h" class="vv-slider" min="350" max="1440" step="10" value="750">
+              </div>
+              <div class="vv-param-val" id="val-h">750px</div>
+              <button class="vv-btn-reset" id="btn-reset-h" title="기본 750px 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip chip-h" data-h="580">580px</button>
+              <button class="vv-mini-chip chip-h active" data-h="750">750px</button>
+              <button class="vv-mini-chip chip-h" data-h="900">900px</button>
+              <button class="vv-mini-chip chip-h" data-h="1100">1100px</button>
+            </div>
+          </div>
+
+          <!-- Subtitle Size -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">자막 크기 (Font)</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-sub" class="vv-slider" min="10" max="36" step="1" value="14">
+              </div>
+              <div class="vv-param-val" id="val-sub">14px</div>
+              <button class="vv-btn-reset" id="btn-reset-sub" title="14px 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip chip-sub" data-size="12">12px</button>
+              <button class="vv-mini-chip chip-sub active" data-size="14">14px</button>
+              <button class="vv-mini-chip chip-sub" data-size="17">17px</button>
+              <button class="vv-mini-chip chip-sub" data-size="20">20px</button>
+            </div>
+          </div>
+
+          <!-- Subtitle Toggle Switch -->
+          <div class="vv-switch-container">
+            <span style="font-size:11px; color:var(--vv-text-sub);">실시간 자막 표시 (Ctrl + U)</span>
+            <label class="vv-switch">
+              <input type="checkbox" id="chk-subtitle" checked>
+              <span class="vv-switch-slider"></span>
+            </label>
+          </div>
+
+          <!-- Subtitle Live Preview Box -->
+          <div class="vv-subtitle-preview">
+            <div id="sub-preview" class="vv-subtitle-text" style="font-size: 14px;">
+              안녕인 것이다! 즌다몬인 것이다!
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
-    <div class="status-item">
-      <div class="status-dot"></div>
-      <span id="status-vv">VOICEVOX 연동</span>
+
+    <!-- 4. VOICEVOX Speech Test (Script Cell UI) -->
+    <div class="vv-cell-container">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; font-weight:700; color:var(--vv-primary);">💬 음성 합성 및 립싱크 테스트</span>
+        <span style="font-size:10px; color:var(--vv-text-dim);">VOICEVOX Engine ID: 3</span>
+      </div>
+      <div class="vv-script-box">
+        <button class="vv-btn-play" id="btn-speak" title="발화하기">▶</button>
+        <div class="vv-cell-num">1</div>
+        <input type="text" id="inp-speech" class="vv-input-script" value="보쿠는 즌다몬인 것이다! 잘 부탁하는 것이다!" placeholder="테스트할 대사를 입력하세요...">
+      </div>
     </div>
-    <div class="status-item">
-      <span>Port: 8989</span>
+
+    <!-- Footer -->
+    <div class="vv-footer">
+      <span>VOICEVOX Engine: 127.0.0.1:50021</span>
+      <span>Companion Server: 127.0.0.1:8989</span>
     </div>
+
   </div>
 
   <script>
     const bc = new BroadcastChannel('zundamon_channel');
 
+    // Official VOICEVOX style mapped expressions
     const expressionsList = [
-      { key: '1', id: 'exp_smile', name: '미소', icon: '😊' },
-      { key: '2', id: 'exp_laugh', name: '활짝', icon: '😆' },
-      { key: '3', id: 'exp_shy', name: '부끄', icon: '😳' },
-      { key: '4', id: 'exp_surprise', name: '깜짝', icon: '😲' },
-      { key: '5', id: 'exp_angry', name: '삐짐', icon: '😤' },
-      { key: '6', id: 'exp_sad', name: '시무룩', icon: '🥺' },
-      { key: '7', id: 'exp_sleep', name: '졸림', icon: '😴' },
-      { key: '8', id: 'exp_01', name: '초롱', icon: '✨' },
-      { key: '9', id: 'exp_laugh2', name: '신남', icon: '🥳' },
-      { key: '0', id: 'exp_smile', name: '초기화', icon: '🌱' }
+      { key: '1', id: 'exp_smile', name: 'ノーマル', kr: '미소', icon: '😊' },
+      { key: '2', id: 'exp_laugh', name: 'あまあま', kr: '활짝', icon: '😆' },
+      { key: '3', id: 'exp_shy', name: '照れ', kr: '부끄', icon: '😳' },
+      { key: '4', id: 'exp_surprise', name: '驚き', kr: '깜짝', icon: '😲' },
+      { key: '5', id: 'exp_angry', name: 'ツンツン', kr: '삐짐', icon: '😤' },
+      { key: '6', id: 'exp_sad', name: 'しょんぼり', kr: '시무룩', icon: '🥺' },
+      { key: '7', id: 'exp_sleep', name: 'ささやき', kr: '졸림', icon: '😴' },
+      { key: '8', id: 'exp_01', name: 'キラキラ', kr: '초롱', icon: '✨' },
+      { key: '9', id: 'exp_laugh2', name: 'ウキウキ', kr: '신남', icon: '🥳' },
+      { key: '0', id: 'exp_smile', name: 'ノーマル', kr: '초기화', icon: '🌱' }
     ];
 
-    // Build Expression Buttons
-    const exprGrid = document.getElementById('expr-grid');
+    // Build Style Pills
+    const styleGrid = document.getElementById('style-grid');
     expressionsList.slice(0, 9).forEach(expr => {
-      const btn = document.createElement('button');
-      btn.className = 'btn-expr';
-      btn.innerHTML = `<span>${expr.icon}</span> <span>${expr.name}</span> <span style="font-size:10px; color:#64748B">(${expr.key})</span>`;
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.btn-expr').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+      const chip = document.createElement('button');
+      chip.className = 'vv-style-chip';
+      chip.innerHTML = `<span>${expr.icon}</span> <span>${expr.name}</span> <span style="font-size:9px; opacity:0.6;">(${expr.kr})</span>`;
+      chip.title = `Ctrl + ${expr.key} : ${expr.kr}`;
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.vv-style-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
         bc.postMessage({ type: 'expression', expr: expr });
       });
-      exprGrid.appendChild(btn);
+      styleGrid.appendChild(chip);
     });
 
     document.getElementById('btn-reset-expr').addEventListener('click', () => {
-      document.querySelectorAll('.btn-expr').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.vv-style-chip').forEach(c => c.classList.remove('active'));
       bc.postMessage({ type: 'expression_reset' });
     });
 
-    // Canvas Size Controls
-    const inpW = document.getElementById('inp-w');
-    const inpH = document.getElementById('inp-h');
-    const btnApplySize = document.getElementById('btn-apply-size');
-    const sizeChips = document.querySelectorAll('[data-w]');
+    // 1. Scale Control (0.2 Step)
+    const sliderScale = document.getElementById('slider-scale');
+    const valScale = document.getElementById('val-scale');
+    const btnResetScale = document.getElementById('btn-reset-scale');
+    const btnScaleStepDown = document.getElementById('btn-scale-step-down');
+    const btnScaleStepUp = document.getElementById('btn-scale-step-up');
 
-    function applyCanvasDimensions(w, h) {
+    function applyScale(s, updateSlider = true) {
+      s = Math.max(0.4, Math.min(3.0, Math.round((Math.round(s / 0.2) * 0.2) * 10) / 10));
+      valScale.textContent = s.toFixed(1) + 'x';
+      if (updateSlider) sliderScale.value = s;
+      localStorage.setItem('zundamon_zoom', s.toFixed(1));
+    }
+
+    sliderScale.addEventListener('input', () => {
+      const s = parseFloat(sliderScale.value);
+      applyScale(s, false);
+      bc.postMessage({ type: 'scale_delta', delta: s - parseFloat(valScale.textContent) });
+    });
+
+    btnScaleStepDown.addEventListener('click', () => {
+      bc.postMessage({ type: 'scale_delta', delta: -0.2 });
+    });
+
+    btnScaleStepUp.addEventListener('click', () => {
+      bc.postMessage({ type: 'scale_delta', delta: 0.2 });
+    });
+
+    btnResetScale.addEventListener('click', () => {
+      bc.postMessage({ type: 'scale_reset' });
+    });
+
+    // 2. Canvas Dimensions (Width & Height)
+    const sliderW = document.getElementById('slider-w');
+    const valW = document.getElementById('val-w');
+    const sliderH = document.getElementById('slider-h');
+    const valH = document.getElementById('val-h');
+    const btnResetW = document.getElementById('btn-reset-w');
+    const btnResetH = document.getElementById('btn-reset-h');
+    const chipsW = document.querySelectorAll('.chip-w');
+    const chipsH = document.querySelectorAll('.chip-h');
+
+    function applyDimensions(w, h) {
       w = parseInt(w) || 560;
       h = parseInt(h) || 750;
-      inpW.value = w;
-      inpH.value = h;
+      sliderW.value = w;
+      valW.textContent = w + 'px';
+      sliderH.value = h;
+      valH.textContent = h + 'px';
+
+      chipsW.forEach(c => c.classList.toggle('active', parseInt(c.dataset.w) === w));
+      chipsH.forEach(c => c.classList.toggle('active', parseInt(c.dataset.h) === h));
+
       fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -503,73 +788,43 @@
       bc.postMessage({ type: 'canvas_size', w: w, h: h });
     }
 
-    sizeChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        sizeChips.forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        applyCanvasDimensions(chip.getAttribute('data-w'), chip.getAttribute('data-h'));
+    sliderW.addEventListener('input', () => {
+      applyDimensions(sliderW.value, sliderH.value);
+    });
+    sliderH.addEventListener('input', () => {
+      applyDimensions(sliderW.value, sliderH.value);
+    });
+
+    chipsW.forEach(c => {
+      c.addEventListener('click', () => {
+        applyDimensions(c.dataset.w, sliderH.value);
+      });
+    });
+    chipsH.forEach(c => {
+      c.addEventListener('click', () => {
+        applyDimensions(sliderW.value, c.dataset.h);
       });
     });
 
-    btnApplySize.addEventListener('click', () => {
-      applyCanvasDimensions(inpW.value, inpH.value);
-    });
+    btnResetW.addEventListener('click', () => applyDimensions(560, sliderH.value));
+    btnResetH.addEventListener('click', () => applyDimensions(sliderW.value, 750));
 
-    // Model Scale Controls (0.2 step)
-    const scaleVal = document.getElementById('scale-val');
-    function updateScaleDisplay(s) {
-      if (scaleVal && typeof s === 'number') {
-        scaleVal.textContent = s.toFixed(1) + 'x';
-      }
-    }
-
-    let initScale = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
-    if (!isNaN(initScale)) {
-      initScale = Math.round((Math.round(initScale / 0.2) * 0.2) * 10) / 10;
-      updateScaleDisplay(initScale);
-    }
-
-    document.getElementById('btn-scale-down').addEventListener('click', () => {
-      bc.postMessage({ type: 'scale_delta', delta: -0.2 });
-    });
-    document.getElementById('btn-scale-up').addEventListener('click', () => {
-      bc.postMessage({ type: 'scale_delta', delta: 0.2 });
-    });
-    document.getElementById('btn-scale-reset').addEventListener('click', () => {
-      bc.postMessage({ type: 'scale_reset' });
-    });
-
-    // Listen for companion broadcast messages (scale updates)
-    bc.onmessage = (e) => {
-      const data = e.data;
-      if (!data) return;
-      if (data.type === 'scale_updated' && typeof data.scale === 'number') {
-        updateScaleDisplay(data.scale);
-      }
-    };
-    bc.postMessage({ type: 'get_scale' });
-
-    // Subtitle Controls
+    // 3. Subtitle Controls
     const chkSubtitle = document.getElementById('chk-subtitle');
-    const subSizeSlider = document.getElementById('sub-size-slider');
-    const subSizeVal = document.getElementById('sub-size-val');
+    const sliderSub = document.getElementById('slider-sub');
+    const valSub = document.getElementById('val-sub');
     const subPreview = document.getElementById('sub-preview');
-    const subChips = document.querySelectorAll('.btn-sub-chip');
+    const btnResetSub = document.getElementById('btn-reset-sub');
+    const chipsSub = document.querySelectorAll('.chip-sub');
 
     function updateSubtitle(enabled, size) {
       chkSubtitle.checked = enabled;
-      subSizeSlider.value = size;
-      subSizeVal.textContent = size + 'px';
+      sliderSub.value = size;
+      valSub.textContent = size + 'px';
       subPreview.style.fontSize = size + 'px';
       subPreview.style.display = enabled ? 'block' : 'none';
 
-      subChips.forEach(chip => {
-        if (parseInt(chip.getAttribute('data-size')) === size) {
-          chip.classList.add('active');
-        } else {
-          chip.classList.remove('active');
-        }
-      });
+      chipsSub.forEach(c => c.classList.toggle('active', parseInt(c.dataset.size) === size));
 
       fetch('/api/config', {
         method: 'POST',
@@ -581,20 +836,24 @@
     }
 
     chkSubtitle.addEventListener('change', () => {
-      updateSubtitle(chkSubtitle.checked, parseInt(subSizeSlider.value));
+      updateSubtitle(chkSubtitle.checked, parseInt(sliderSub.value));
     });
 
-    subSizeSlider.addEventListener('input', () => {
-      updateSubtitle(chkSubtitle.checked, parseInt(subSizeSlider.value));
+    sliderSub.addEventListener('input', () => {
+      updateSubtitle(chkSubtitle.checked, parseInt(sliderSub.value));
     });
 
-    subChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        updateSubtitle(chkSubtitle.checked, parseInt(chip.getAttribute('data-size')));
+    chipsSub.forEach(c => {
+      c.addEventListener('click', () => {
+        updateSubtitle(chkSubtitle.checked, parseInt(c.dataset.size));
       });
     });
 
-    // Voice Test
+    btnResetSub.addEventListener('click', () => {
+      updateSubtitle(chkSubtitle.checked, 14);
+    });
+
+    // 4. Voice Speech Test
     const inpSpeech = document.getElementById('inp-speech');
     const btnSpeak = document.getElementById('btn-speak');
 
@@ -602,7 +861,7 @@
       const text = inpSpeech.value.trim();
       if (!text) return;
       btnSpeak.disabled = true;
-      btnSpeak.textContent = '합성 중...';
+      btnSpeak.textContent = '■';
       fetch('/api/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -612,31 +871,55 @@
       .finally(() => {
         setTimeout(() => {
           btnSpeak.disabled = false;
-          btnSpeak.textContent = '말하기 🎙️';
-        }, 1000);
+          btnSpeak.textContent = '▶';
+        }, 1200);
       });
     });
 
-    // Fetch initial config from server
+    // Listen for companion broadcast messages
+    bc.onmessage = (e) => {
+      const data = e.data;
+      if (!data) return;
+      if (data.type === 'scale_updated' && typeof data.scale === 'number') {
+        applyScale(data.scale, true);
+      }
+    };
+    bc.postMessage({ type: 'get_scale' });
+
+    // Initial Config Sync
     fetch('/api/config')
       .then(r => r.json())
       .then(cfg => {
-        if (cfg.win_w) inpW.value = cfg.win_w;
-        if (cfg.win_h) inpH.value = cfg.win_h;
+        const w = cfg.win_w || 560;
+        const h = cfg.win_h || 750;
+        sliderW.value = w;
+        valW.textContent = w + 'px';
+        sliderH.value = h;
+        valH.textContent = h + 'px';
+        chipsW.forEach(c => c.classList.toggle('active', parseInt(c.dataset.w) === w));
+        chipsH.forEach(c => c.classList.toggle('active', parseInt(c.dataset.h) === h));
+
         const subEnabled = cfg.subtitle_enabled !== false;
         const subSize = cfg.subtitle_size || 14;
         updateSubtitle(subEnabled, subSize);
+
+        const initScale = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
+        applyScale(initScale, true);
       })
       .catch(() => {});
 
-    // Fetch health status
+    // Engine Health Sync
     fetch('/api/health')
       .then(r => r.json())
-      .then(data => {
-        if (data.voicevox) {
-          document.getElementById('status-vv').textContent = 'VOICEVOX 연동';
+      .then(d => {
+        const statusEngine = document.getElementById('status-engine');
+        const statusDot = document.getElementById('status-dot');
+        if (d.voicevox) {
+          statusEngine.textContent = 'VOICEVOX 0.25.1 接続中';
+          statusDot.style.background = 'var(--vv-primary-bright)';
         } else {
-          document.getElementById('status-vv').textContent = 'VOICEVOX 대기';
+          statusEngine.textContent = 'VOICEVOX 대기 중';
+          statusDot.style.background = '#F59E0B';
         }
       })
       .catch(() => {});
