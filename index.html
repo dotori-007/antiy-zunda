@@ -56,6 +56,54 @@
       transform: translateY(0);
     }
 
+    /* Clean Pure White Speech Bubble UI */
+    #speech-bubble {
+      position: absolute;
+      top: 14px;
+      left: 12px;
+      right: 12px;
+      max-width: calc(100% - 24px);
+      margin: 0 auto;
+      background: #FFFFFF;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      padding: 9px 13px 10px 13px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.24), 0 1px 4px rgba(0, 0, 0, 0.1);
+      color: #111827;
+      font-family: 'Pretendard', 'Malgun Gothic', 'Segoe UI', sans-serif;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.88) translateY(-6px);
+      transition: opacity 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                  transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 30;
+    }
+    #speech-bubble.show {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    .bubble-text {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.45;
+      word-break: keep-all;
+      white-space: pre-wrap;
+      color: #111827;
+      text-align: center;
+    }
+    .bubble-arrow {
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 8px solid #FFFFFF;
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.12));
+    }
+
     /* Toast Notification */
     #toast {
       position: absolute;
@@ -74,7 +122,7 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.2s ease, transform 0.2s ease;
-      z-index: 25;
+      z-index: 35;
       white-space: nowrap;
     }
     #toast.show {
@@ -88,26 +136,43 @@
 </head>
 <body>
   <div id="toast"></div>
+  <div id="speech-bubble" class="speech-bubble">
+    <div id="bubble-text" class="bubble-text"></div>
+    <div class="bubble-arrow"></div>
+  </div>
   <canvas id="canvas"></canvas>
   <div id="subtitle"></div>
 
   <script>
+    window.onerror = function(msg, url, line, col, err) {
+      fetch('/api/model_error?err=' + encodeURIComponent(`JS error: ${msg} at line ${line}:${col}`)).catch(()=>{});
+    };
+    window.onunhandledrejection = function(e) {
+      fetch('/api/model_error?err=' + encodeURIComponent(`Promise rejection: ${e.reason}`)).catch(()=>{});
+    };
+
     const canvas = document.getElementById('canvas');
     const subtitleEl = document.getElementById('subtitle');
+    const speechBubbleEl = document.getElementById('speech-bubble');
+    const bubbleTextEl = document.getElementById('bubble-text');
     const toastEl = document.getElementById('toast');
 
-    // Subtitle Settings State
+    // Display & Subtitle Mode State: 'bubble' | 'bottom' | 'none'
+    let displayMode = localStorage.getItem('zundamon_display_mode') || 'bubble';
     let isSubtitleEnabled = localStorage.getItem('zundamon_sub_enabled') !== '0';
     let currentSubtitleSize = parseInt(localStorage.getItem('zundamon_sub_size') || '14', 10);
     if (isNaN(currentSubtitleSize) || currentSubtitleSize < 10) currentSubtitleSize = 14;
 
-    function applySubtitleSettings(saveServer = true) {
-      if (!isSubtitleEnabled && subtitleEl) {
-        subtitleEl.classList.remove('show');
+    function applyDisplaySettings(saveServer = true) {
+      if (subtitleEl) subtitleEl.style.fontSize = currentSubtitleSize + 'px';
+      if (bubbleTextEl) bubbleTextEl.style.fontSize = Math.min(16, currentSubtitleSize) + 'px';
+
+      if (displayMode === 'none' || !isSubtitleEnabled) {
+        if (subtitleEl) subtitleEl.classList.remove('show');
+        if (speechBubbleEl) speechBubbleEl.classList.remove('show');
       }
-      if (subtitleEl) {
-        subtitleEl.style.fontSize = currentSubtitleSize + 'px';
-      }
+
+      localStorage.setItem('zundamon_display_mode', displayMode);
       localStorage.setItem('zundamon_sub_enabled', isSubtitleEnabled ? '1' : '0');
       localStorage.setItem('zundamon_sub_size', currentSubtitleSize.toString());
 
@@ -116,6 +181,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            display_mode: displayMode,
             subtitle_enabled: isSubtitleEnabled,
             subtitle_size: currentSubtitleSize
           })
@@ -125,17 +191,27 @@
 
     let subPreviewTimeout = null;
     function previewSubtitle() {
-      if (!isSubtitleEnabled || !subtitleEl) return;
-      subtitleEl.textContent = `🌱 보쿠는 즌다몬인 것이다! (${currentSubtitleSize}px)`;
-      subtitleEl.classList.add('show');
-      if (subPreviewTimeout) clearTimeout(subPreviewTimeout);
-      subPreviewTimeout = setTimeout(() => {
-        if (!isSpeaking) subtitleEl.classList.remove('show');
-      }, 2000);
+      if (!isSubtitleEnabled || displayMode === 'none') return;
+      const previewMsg = `🌱 보쿠는 즌다몬인 것이다! (${currentSubtitleSize}px)`;
+
+      if (displayMode === 'bubble' && speechBubbleEl && bubbleTextEl) {
+        bubbleTextEl.textContent = previewMsg;
+        speechBubbleEl.classList.add('show');
+        if (subPreviewTimeout) clearTimeout(subPreviewTimeout);
+        subPreviewTimeout = setTimeout(() => {
+          if (!isSpeaking) speechBubbleEl.classList.remove('show');
+        }, 2200);
+      } else if (subtitleEl) {
+        subtitleEl.textContent = previewMsg;
+        subtitleEl.classList.add('show');
+        if (subPreviewTimeout) clearTimeout(subPreviewTimeout);
+        subPreviewTimeout = setTimeout(() => {
+          if (!isSpeaking) subtitleEl.classList.remove('show');
+        }, 2200);
+      }
     }
 
-    // Initial subtitle state
-    applySubtitleSettings(false);
+    applyDisplaySettings(false);
 
     const app = new PIXI.Application({
       view: canvas,
@@ -282,11 +358,16 @@
         setCanvasDimensions(data.w, data.h);
       } else if (data.type === 'subtitle_toggle') {
         isSubtitleEnabled = !!data.enabled;
-        applySubtitleSettings(false);
+        applyDisplaySettings(false);
         showToast(isSubtitleEnabled ? '💬 자막: ON' : '💬 자막: OFF');
+      } else if (data.type === 'display_mode') {
+        displayMode = data.mode || 'bubble';
+        applyDisplaySettings(false);
+        showToast(displayMode === 'bubble' ? '💭 말풍선 모드' : (displayMode === 'bottom' ? '📝 하단 자막 모드' : '❌ 자막 숨김'));
+        previewSubtitle();
       } else if (data.type === 'subtitle_size') {
         currentSubtitleSize = data.size;
-        applySubtitleSettings(false);
+        applyDisplaySettings(false);
         previewSubtitle();
       }
     };
@@ -301,7 +382,10 @@
         if (cfg.subtitle_size) {
           currentSubtitleSize = parseInt(cfg.subtitle_size, 10);
         }
-        applySubtitleSettings(false);
+        if (cfg.display_mode) {
+          displayMode = cfg.display_mode;
+        }
+        applyDisplaySettings(false);
       })
       .catch(() => {});
 
@@ -367,7 +451,7 @@
         else if (e.key === 'u' || e.key === 'U') {
           e.preventDefault();
           isSubtitleEnabled = !isSubtitleEnabled;
-          applySubtitleSettings(true);
+          applyDisplaySettings(true);
           if (isSubtitleEnabled) {
             showToast('💬 자막: ON');
             previewSubtitle();
@@ -384,40 +468,64 @@
       e.stopPropagation();
     }, { passive: false });
 
-    // Click reaction dialogue and motions
-    const clickVoiceLines = [
-      "와앗! 간지러운 것이다!",
-      "보쿠를 왜 찌르는 것인가?!",
-      "에헤헤~ 무슨 일인 것이다?",
-      "놀래키지 마는 것이다!",
-      "보쿠는 언제나 곁에 있는 것이다!",
-      "얍! 보쿠는 끄떡없는 것이다!",
-      "보쿠에게 관심이 많은 모양인 것이다~"
-    ];
-    const clickMotions = [
-      'mtnBody_laugh', 'mtnBody_laugh2', 'mtnBody_laugh3',
-      'mtnBody_wave', 'mtnBody_wave2', 'mtnBody_point', 'mtnBody_point2',
-      'mtnFace_shy', 'mtnFace_laugh', 'mtnFace_surprise', 'mtnBody_yes'
+    // Click Voice Lines and Motions
+    const clickReactions = [
+      { text: "와앗! 간지러운 것이다!", expr: "exp_surprise", motion: "mtnFace_surprise" },
+      { text: "갑자기 찌르면 깜짝 놀라는 것이다!", expr: "exp_surprise", motion: "mtnFace_surprise" },
+      { text: "보쿠를 왜 찌르는 것인가?! 자꾸 그러면 풋콩 미사일을 날릴 것이다!", expr: "exp_angry", motion: "mtnBody_point" },
+      { text: "얍! 보쿠는 끄떡없는 것이다~", expr: "exp_01", motion: "mtnBody_yes" },
+      { text: "무슨 일인 것이다? 보쿠의 도움이 필요한 것인가?", expr: "exp_01", motion: "mtnBody_point2" },
+      { text: "에헤헤~ 보쿠에게 관심이 많은 모양인 것이다~", expr: "exp_laugh", motion: "mtnBody_wave" }
     ];
 
     let lastClickTime = 0;
-    function triggerClickReaction() {
+    function triggerClickReaction(e) {
       const now = Date.now();
-      if (now - lastClickTime < 1400) return;
+      if (now - lastClickTime < 1200) return;
       lastClickTime = now;
 
-      if (live2dModel) {
+      const reaction = clickReactions[Math.floor(Math.random() * clickReactions.length)];
+      const foundExpr = expressionsList.find(x => x.id === reaction.expr) || expressionsList[0];
+      applyExpression(foundExpr);
+
+      if (live2dModel && reaction.motion) {
         try {
-          const m = clickMotions[Math.floor(Math.random() * clickMotions.length)];
-          live2dModel.motion('', m);
-        } catch(e) {}
+          live2dModel.motion('', reaction.motion);
+        } catch(err) {}
       }
 
-      const text = clickVoiceLines[Math.floor(Math.random() * clickVoiceLines.length)];
       fetch('/api/speak', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text, speaker: 3 })
+        body: JSON.stringify({
+          text: reaction.text,
+          speaker: 3,
+          expression: reaction.expr,
+          motion: reaction.motion
+        })
+      }).catch(() => {});
+    }
+
+    function triggerDoubleClickReaction() {
+      const happyExpr = expressionsList[8] || expressionsList[1]; // laugh2
+      applyExpression(happyExpr);
+      showToast("⚡ 더블 클릭 파워업!");
+
+      if (live2dModel) {
+        try {
+          live2dModel.motion('', 'mtnBody_laugh3');
+        } catch(e) {}
+      }
+
+      fetch('/api/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: "더블 클릭인 것이다! 에너지 100% 충전 완료인 것이다~!",
+          speaker: 3,
+          expression: happyExpr.id,
+          motion: "mtnBody_laugh3"
+        })
       }).catch(() => {});
     }
 
@@ -426,6 +534,7 @@
     let leftDownTime = 0;
     let isLeftDragging = false;
     let dragPrevX = 0, dragPrevY = 0;
+    let lastClickTimestamp = 0;
 
     canvas.addEventListener('mousedown', (e) => {
       window.focus();
@@ -452,7 +561,23 @@
       }
     });
 
+    // Real-time Smooth Gaze Tracking Coordinates
+    let targetFocusX = 0;
+    let targetFocusY = 0;
+    let currentFocusX = 0;
+    let currentFocusY = 0;
+    let lastMouseMoveTime = Date.now();
+
     window.addEventListener('mousemove', (e) => {
+      lastMouseMoveTime = Date.now();
+
+      // Local Mouse gaze tracking relative to window center
+      const w = window.innerWidth || 560;
+      const h = window.innerHeight || 750;
+      targetFocusX = Math.max(-1.0, Math.min(1.0, (e.clientX - w / 2) / (w / 2)));
+      targetFocusY = Math.max(-1.0, Math.min(1.0, -(e.clientY - h / 2) / (h / 2)));
+
+      // Window dragging
       if (e.buttons === 1) {
         const totalDist = Math.hypot(e.screenX - leftDownX, e.screenY - leftDownY);
         if (totalDist > 4) {
@@ -480,8 +605,20 @@
       if (e.button === 0) {
         const totalDist = Math.hypot(e.screenX - leftDownX, e.screenY - leftDownY);
         const elapsed = Date.now() - leftDownTime;
-        if (!isLeftDragging && totalDist <= 4 && elapsed < 400) {
-          triggerClickReaction();
+        if (!isLeftDragging && totalDist <= 4 && elapsed < 350) {
+          const now = Date.now();
+          if (now - lastClickTimestamp < 320) {
+            // Double Click
+            triggerDoubleClickReaction();
+            lastClickTimestamp = 0;
+          } else {
+            lastClickTimestamp = now;
+            setTimeout(() => {
+              if (lastClickTimestamp === now) {
+                triggerClickReaction(e);
+              }
+            }, 320);
+          }
         }
         isLeftDragging = false;
       }
@@ -494,7 +631,7 @@
       e.preventDefault();
     });
 
-    // Global Mouse Tracking with Forward Default
+    // Global Mouse Tracking via pywebview when cursor leaves companion window
     let isTrackingActive = false;
     async function startGlobalMouseTracking() {
       if (isTrackingActive) return;
@@ -502,27 +639,49 @@
 
       while (true) {
         try {
-          if (window.pywebview && window.pywebview.api && live2dModel && live2dModel.internalModel && live2dModel.internalModel.focusController) {
+          const now = Date.now();
+          // If local mouse hasn't moved recently, check global desktop cursor
+          if (now - lastMouseMoveTime > 80 && window.pywebview && window.pywebview.api && window.pywebview.api.get_tracking) {
             const data = await window.pywebview.api.get_tracking();
             if (data && typeof data.fx === 'number') {
-              live2dModel.internalModel.focusController.focus(data.fx, data.fy);
+              targetFocusX = data.fx;
+              targetFocusY = data.fy;
             }
           }
+          // If completely idle for > 4.5s, look naturally forward
+          if (now - lastMouseMoveTime > 4500) {
+            targetFocusX = targetFocusX * 0.95;
+            targetFocusY = targetFocusY * 0.95;
+          }
         } catch(e) {}
-        await new Promise(resolve => setTimeout(resolve, 16));
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
 
     window.addEventListener('pywebviewready', () => {
       startGlobalMouseTracking();
     });
-    setTimeout(startGlobalMouseTracking, 800);
+    setTimeout(startGlobalMouseTracking, 600);
 
-    // Real-time Lip-Sync Hook via Analyser
+    // Live2D Real-time Lip-Sync & Eye/Head Gaze Updates in Ticker
     app.ticker.add(() => {
       if (!live2dModel || !live2dModel.internalModel || !live2dModel.internalModel.coreModel) return;
       const core = live2dModel.internalModel.coreModel;
 
+      // Smooth gaze tracking calculation
+      currentFocusX += (targetFocusX - currentFocusX) * 0.14;
+      currentFocusY += (targetFocusY - currentFocusY) * 0.14;
+
+      try {
+        core.setParameterValueById('ParamEyeBallX', currentFocusX * 0.9);
+        core.setParameterValueById('ParamEyeBallY', currentFocusY * 0.9);
+        core.setParameterValueById('ParamAngleX', currentFocusX * 24);
+        core.setParameterValueById('ParamAngleY', currentFocusY * 18);
+        core.setParameterValueById('ParamAngleZ', currentFocusX * -5);
+        core.setParameterValueById('ParamBodyAngleX', currentFocusX * 7);
+      } catch(e) {}
+
+      // Lip-sync
       if (isSpeaking && analyser && dataArray) {
         analyser.getByteFrequencyData(dataArray);
         let sum = 0;
@@ -532,15 +691,19 @@
           count++;
         }
         const avg = count > 0 ? (sum / count) : 0;
-        let mouthOpen = Math.min(1.0, (avg / 100) * 1.25);
+        let mouthOpen = Math.min(1.0, (avg / 100) * 1.3);
         if (mouthOpen < 0.08) mouthOpen = 0;
 
-        core.setParameterValueById('ParamMouthOpenY', mouthOpen);
+        try {
+          core.setParameterValueById('ParamMouthOpenY', mouthOpen);
+        } catch(e) {}
       }
     });
 
-    // Speak Function: Plays audio buffer with lipsync & subtitle
-    function speakAudio(audioUrl, text) {
+    let bubbleHideTimeout = null;
+
+    // Speak Function: Plays audio buffer with lipsync, comic bubble & subtitle
+    function speakAudio(audioUrl, text, expression, motion) {
       if (activeAudio) {
         activeAudio.pause();
         activeAudio = null;
@@ -564,26 +727,63 @@
       source.connect(analyser);
       analyser.connect(audioCtx.destination);
 
+      if (bubbleHideTimeout) {
+        clearTimeout(bubbleHideTimeout);
+        bubbleHideTimeout = null;
+      }
+
+      // Display dialogue in Comic Speech Bubble or Bottom Subtitle
       if (text && isSubtitleEnabled) {
-        subtitleEl.textContent = text;
-        subtitleEl.classList.add('show');
+        if (displayMode === 'bubble' && speechBubbleEl && bubbleTextEl) {
+          bubbleTextEl.textContent = text;
+          speechBubbleEl.classList.add('show');
+          if (subtitleEl) subtitleEl.classList.remove('show');
+        } else if (displayMode === 'bottom' && subtitleEl) {
+          subtitleEl.textContent = text;
+          subtitleEl.classList.add('show');
+          if (speechBubbleEl) speechBubbleEl.classList.remove('show');
+        }
       }
 
       isSpeaking = true;
 
+      // Apply dynamic expression if provided
+      if (expression) {
+        const found = expressionsList.find(x => x.id === expression || x.key === expression);
+        if (found) {
+          applyExpression(found);
+        } else if (live2dModel) {
+          try { live2dModel.expression(expression); } catch(e) {}
+        }
+      }
+
+      // Play motion if provided or pick friendly talk motion
       if (live2dModel) {
         try {
-          const talkMotions = ['mtnFace_talk', 'mtnBody_point', 'mtnBody_wave', 'mtnBody_yes'];
-          const tm = talkMotions[Math.floor(Math.random() * talkMotions.length)];
-          live2dModel.motion('', tm);
+          if (motion) {
+            live2dModel.motion('', motion);
+          } else {
+            const talkMotions = ['mtnFace_talk', 'mtnBody_point', 'mtnBody_wave', 'mtnBody_yes'];
+            const tm = talkMotions[Math.floor(Math.random() * talkMotions.length)];
+            live2dModel.motion('', tm);
+          }
         } catch(e) {}
       }
 
       audio.onended = () => {
         isSpeaking = false;
-        subtitleEl.classList.remove('show');
+        // Keep bubble/subtitle visible for an extra 1.2s before fading out
+        bubbleHideTimeout = setTimeout(() => {
+          if (!isSpeaking) {
+            if (speechBubbleEl) speechBubbleEl.classList.remove('show');
+            if (subtitleEl) subtitleEl.classList.remove('show');
+          }
+        }, 1200);
+
         if (live2dModel && live2dModel.internalModel && live2dModel.internalModel.coreModel) {
-          live2dModel.internalModel.coreModel.setParameterValueById('ParamMouthOpenY', 0);
+          try {
+            live2dModel.internalModel.coreModel.setParameterValueById('ParamMouthOpenY', 0);
+          } catch(e) {}
         }
       };
 
@@ -599,14 +799,14 @@
           const data = await res.json();
           if (data && data.audioId && data.audioId > lastAudioId) {
             lastAudioId = data.audioId;
-            speakAudio(data.audioUrl, data.text);
+            speakAudio(data.audioUrl, data.text, data.expression, data.motion);
           }
         }
       } catch(e) {}
-      setTimeout(checkSpeechQueue, 80);
+      setTimeout(checkSpeechQueue, 70);
     }
 
-    setTimeout(checkSpeechQueue, 300);
+    setTimeout(checkSpeechQueue, 250);
   </script>
 </body>
 </html>

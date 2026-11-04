@@ -472,10 +472,22 @@
             </div>
           </div>
 
+          <!-- Subtitle & Bubble Mode -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">대사 표시 방식</span>
+              <div class="vv-preset-row" style="padding-left:0; margin-top:0;">
+                <button class="vv-mini-chip chip-mode active" data-mode="bubble">💭 만화 말풍선</button>
+                <button class="vv-mini-chip chip-mode" data-mode="bottom">📝 하단 자막</button>
+                <button class="vv-mini-chip chip-mode" data-mode="none">❌ 숨김</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Subtitle Size -->
           <div>
             <div class="vv-param-row">
-              <span class="vv-param-label">자막 크기 (Font)</span>
+              <span class="vv-param-label">글자 크기 (Font)</span>
               <div class="vv-slider-container">
                 <input type="range" id="slider-sub" class="vv-slider" min="10" max="36" step="1" value="14">
               </div>
@@ -492,7 +504,7 @@
 
           <!-- Subtitle Toggle Switch -->
           <div class="vv-switch-container">
-            <span style="font-size:11px; color:var(--vv-text-sub);">실시간 자막 표시 (Ctrl + U)</span>
+            <span style="font-size:11px; color:var(--vv-text-sub);">실시간 텍스트 표시 (Ctrl + U)</span>
             <label class="vv-switch">
               <input type="checkbox" id="chk-subtitle" checked>
               <span class="vv-switch-slider"></span>
@@ -506,6 +518,23 @@
             </div>
           </div>
 
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.5 PC Overload Alert Settings -->
+    <div class="vv-panel">
+      <div class="vv-panel-header">
+        <span>⚡ PC 리소스 과부하 감지 경고</span>
+        <span style="font-size:10px; color:var(--vv-text-dim);">시스템 보호 알림</span>
+      </div>
+      <div class="vv-panel-body">
+        <div class="vv-switch-container">
+          <span style="font-size:11px; color:var(--vv-text);">CPU/메모리 90% 이상 시 음성 경고</span>
+          <label class="vv-switch">
+            <input type="checkbox" id="chk-resource" checked>
+            <span class="vv-switch-slider"></span>
+          </label>
         </div>
       </div>
     </div>
@@ -687,6 +716,40 @@
       updateSubtitle(chkSubtitle.checked, 14);
     });
 
+    // Display Mode & Assistant Toggles
+    const chipsMode = document.querySelectorAll('.chip-mode');
+    let currentDisplayMode = 'bubble';
+
+    function setDisplayMode(mode, saveServer = true) {
+      currentDisplayMode = mode;
+      chipsMode.forEach(c => c.classList.toggle('active', c.dataset.mode === mode));
+      bc.postMessage({ type: 'display_mode', mode: mode });
+      if (saveServer) {
+        fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ display_mode: mode })
+        }).catch(() => {});
+      }
+    }
+
+    chipsMode.forEach(c => {
+      c.addEventListener('click', () => {
+        setDisplayMode(c.dataset.mode, true);
+      });
+    });
+
+    const chkResource = document.getElementById('chk-resource');
+    if (chkResource) {
+      chkResource.addEventListener('change', () => {
+        fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resource_alert: chkResource.checked })
+        }).catch(() => {});
+      });
+    }
+
     // 4. Voice Speech Test
     const inpSpeech = document.getElementById('inp-speech');
     const btnSpeak = document.getElementById('btn-speak');
@@ -736,6 +799,12 @@
         const subEnabled = cfg.subtitle_enabled !== false;
         const subSize = cfg.subtitle_size || 14;
         updateSubtitle(subEnabled, subSize);
+
+        if (cfg.display_mode) {
+          setDisplayMode(cfg.display_mode, false);
+        }
+
+        if (typeof cfg.resource_alert === 'boolean' && chkResource) chkResource.checked = cfg.resource_alert;
 
         const initScale = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
         applyScale(initScale, true);

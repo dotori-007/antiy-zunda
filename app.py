@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import json
+import random
 import hashlib
 import tempfile
 import urllib.request
@@ -79,6 +80,67 @@ user32.SendMessageW.restype = ctypes.c_ssize_t
 
 class POINT(ctypes.Structure):
     _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
+class MEMORYSTATUSEX(ctypes.Structure):
+    _fields_ = [
+        ('dwLength', wintypes.DWORD),
+        ('dwMemoryLoad', wintypes.DWORD),
+        ('ullTotalPhys', ctypes.c_uint64),
+        ('ullAvailPhys', ctypes.c_uint64),
+        ('ullTotalPageFile', ctypes.c_uint64),
+        ('ullAvailPageFile', ctypes.c_uint64),
+        ('ullTotalVirtual', ctypes.c_uint64),
+        ('ullAvailVirtual', ctypes.c_uint64),
+        ('ullAvailExtendedVirtual', ctypes.c_uint64),
+    ]
+
+class LASTINPUTINFO(ctypes.Structure):
+    _fields_ = [('cbSize', wintypes.UINT), ('dwTime', wintypes.DWORD)]
+
+class FILETIME(ctypes.Structure):
+    _fields_ = [('dwLowDateTime', wintypes.DWORD), ('dwHighDateTime', wintypes.DWORD)]
+
+def get_idle_seconds():
+    try:
+        lii = LASTINPUTINFO()
+        lii.cbSize = ctypes.sizeof(LASTINPUTINFO)
+        if user32.GetLastInputInfo(ctypes.byref(lii)):
+            tick = ctypes.windll.kernel32.GetTickCount()
+            return max(0.0, (tick - lii.dwTime) / 1000.0)
+    except Exception:
+        pass
+    return 0.0
+
+def get_system_load():
+    mem_load = 0
+    try:
+        stat = MEMORYSTATUSEX()
+        stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+            mem_load = stat.dwMemoryLoad
+    except Exception:
+        pass
+
+    cpu_load = 0.0
+    try:
+        def _to_int(ft):
+            return (ft.dwHighDateTime << 32) + ft.dwLowDateTime
+        idle1, kernel1, user1 = FILETIME(), FILETIME(), FILETIME()
+        ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle1), ctypes.byref(kernel1), ctypes.byref(user1))
+        time.sleep(0.12)
+        idle2, kernel2, user2 = FILETIME(), FILETIME(), FILETIME()
+        ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle2), ctypes.byref(kernel2), ctypes.byref(user2))
+
+        idle = _to_int(idle2) - _to_int(idle1)
+        kernel = _to_int(kernel2) - _to_int(kernel1)
+        user = _to_int(user2) - _to_int(user1)
+        total = kernel + user
+        if total > 0:
+            cpu_load = max(0.0, min(100.0, 100.0 * (total - idle) / total))
+    except Exception:
+        pass
+
+    return cpu_load, mem_load
 
 settings_window = None
 
@@ -245,7 +307,14 @@ def ensure_voicevox_running():
 CONFIG_PATH = os.path.join(APP_DIR, "config.json")
 
 def load_config():
-    default_cfg = {"win_w": 560, "win_h": 750, "subtitle_enabled": True, "subtitle_size": 14}
+    default_cfg = {
+        "win_w": 560,
+        "win_h": 750,
+        "subtitle_enabled": True,
+        "subtitle_size": 14,
+        "display_mode": "bubble",
+        "resource_alert": True
+    }
     if os.path.exists(CONFIG_PATH):
         try:
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -266,7 +335,7 @@ def save_config(cfg):
 
 
 # Fast synthesis with MD5 hash caching
-def synthesize_voicevox(synth_text, speaker=3, display_text=None):
+def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=None, motion=None):
     global current_audio_id, latest_audio_info
 
     if display_text is None:
@@ -282,7 +351,9 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None):
         latest_audio_info = {
             "audioId": current_audio_id,
             "audioUrl": f"/audio/{cached_name}",
-            "text": display_text
+            "text": display_text,
+            "expression": expression,
+            "motion": motion
         }
         return latest_audio_info
 
@@ -308,7 +379,9 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None):
     latest_audio_info = {
         "audioId": current_audio_id,
         "audioUrl": f"/audio/{cached_name}",
-        "text": display_text
+        "text": display_text,
+        "expression": expression,
+        "motion": motion
     }
     return latest_audio_info
 
@@ -404,6 +477,10 @@ def api_config():
                 cfg["subtitle_size"] = max(10, min(36, int(data["subtitle_size"])))
             except Exception:
                 pass
+        if "display_mode" in data:
+            cfg["display_mode"] = str(data["display_mode"])
+        if "resource_alert" in data:
+            cfg["resource_alert"] = bool(data["resource_alert"])
         save_config(cfg)
         return json.dumps(cfg)
     return json.dumps(cfg)
@@ -415,9 +492,13 @@ def api_speak():
         data = request.json or {}
         text = data.get("text", "")
         speaker = data.get("speaker", 3)
+        expression = data.get("expression")
+        motion = data.get("motion")
     else:
         text = request.query.get("text", "")
         speaker = int(request.query.get("speaker", 3))
+        expression = request.query.get("expression")
+        motion = request.query.get("motion")
 
     if not text:
         return json.dumps({"error": "Empty text"})
@@ -430,10 +511,54 @@ def api_speak():
         synth_text = text
 
     try:
-        info = synthesize_voicevox(synth_text, speaker, display_text=display_text)
+        info = synthesize_voicevox(synth_text, speaker, display_text=display_text, expression=expression, motion=motion)
         return json.dumps({"success": True, "info": info})
     except Exception as e:
         return json.dumps({"error": str(e)})
+
+class ResourceMonitor:
+    def __init__(self):
+        self.last_speech_time = 0.0
+        self.last_resource_alert_time = 0.0
+
+    def speak_alert(self, text, expression="exp_surprise", motion="mtnFace_surprise"):
+        now = time.time()
+        # Cooldown: at least 90s gap
+        if now - self.last_speech_time < 90:
+            return False
+        self.last_speech_time = now
+        try:
+            kana = to_katakana(text) if any(0xAC00 <= ord(c) <= 0xD7A3 for c in text) else text
+            synthesize_voicevox(kana, speaker=3, display_text=text, expression=expression, motion=motion)
+            log_msg(f"ResourceMonitor alert spoken: {text}")
+            return True
+        except Exception as e:
+            log_msg(f"ResourceMonitor speak error: {e}")
+            return False
+
+    def loop(self):
+        time.sleep(20)
+        while True:
+            try:
+                time.sleep(15)
+                cfg = load_config()
+                if not cfg.get("resource_alert", True):
+                    continue
+
+                now = time.time()
+                # Cooldown: at least 12 minutes between overload alerts
+                if now - self.last_resource_alert_time >= 12 * 60:
+                    cpu, mem = get_system_load()
+                    if cpu > 90 or mem > 92:
+                        self.last_resource_alert_time = now
+                        load_msg = "컴퓨터가 힘들어하고 있는 것이다! 무거운 프로그램이나 탭을 좀 정리해 주는 것이다!"
+                        self.speak_alert(load_msg, expression="exp_surprise", motion="mtnFace_surprise")
+
+            except Exception as e:
+                log_msg(f"ResourceMonitor loop error: {traceback.format_exc()}")
+                time.sleep(20)
+
+resource_monitor = ResourceMonitor()
 
 def run_server():
     try:
@@ -566,6 +691,9 @@ if __name__ == "__main__":
             except Exception as e:
                 log_msg(f"Greeting error: {traceback.format_exc()}")
         threading.Thread(target=greeting, daemon=True).start()
+
+        # Start PC Resource Monitor loop
+        threading.Thread(target=resource_monitor.loop, daemon=True).start()
 
     log_msg("Calling webview.start()...")
     try:
