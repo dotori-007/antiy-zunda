@@ -194,11 +194,18 @@
       bc.postMessage({ type: 'scale_updated', scale: currentScaleMultiplier });
     }
 
+    let modelBaseWidth = 0;
+    let modelBaseHeight = 0;
+
     function resizeModel() {
       if (!live2dModel) return;
+      if (!modelBaseWidth || !modelBaseHeight) {
+        modelBaseWidth = live2dModel.internalModel?.originalWidth || live2dModel.internalModel?.width || (live2dModel.width / (live2dModel.scale.x || 1)) || 1000;
+        modelBaseHeight = live2dModel.internalModel?.originalHeight || live2dModel.internalModel?.height || (live2dModel.height / (live2dModel.scale.y || 1)) || 1000;
+      }
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const baseScale = Math.min(w / live2dModel.width, h / live2dModel.height) * 1.35;
+      const baseScale = Math.min(w / modelBaseWidth, h / modelBaseHeight) * 1.35;
       const finalScale = baseScale * currentScaleMultiplier;
       live2dModel.scale.set(finalScale);
       live2dModel.anchor.set(0.5, 0.5);
@@ -303,6 +310,9 @@
       .then(model => {
         live2dModel = model;
         app.stage.addChild(model);
+
+        modelBaseWidth = model.internalModel?.originalWidth || model.internalModel?.width || model.width || 1000;
+        modelBaseHeight = model.internalModel?.originalHeight || model.internalModel?.height || model.height || 1000;
 
         resizeModel();
         window.addEventListener('resize', resizeModel);
