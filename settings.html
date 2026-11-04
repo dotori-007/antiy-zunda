@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VOICEVOX - 즌다몬 컴패니언 설정</title>
+  <title>즌다몬 컴패니언 설정</title>
   <style>
     :root {
       --vv-bg: #242626;
@@ -56,132 +56,12 @@
       background: rgba(255, 255, 255, 0.35);
     }
 
-    /* VOICEVOX Header Bar */
-    .vv-header {
-      background: var(--vv-bg-alt);
-      border-bottom: 1px solid var(--vv-border);
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-
-    .vv-header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .vv-logo-badge {
-      background: var(--vv-primary-dark);
-      color: var(--vv-primary);
-      border: 1px solid var(--vv-primary);
-      font-weight: 900;
-      font-size: 11px;
-      letter-spacing: 0.5px;
-      padding: 2px 7px;
-      border-radius: 4px;
-    }
-
-    .vv-header-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--vv-text);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .vv-status-indicator {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      color: var(--vv-text-sub);
-    }
-
-    .vv-status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--vv-primary-bright);
-      box-shadow: 0 0 6px var(--vv-primary-bright);
-    }
-
     /* Container */
     .vv-container {
-      padding: 14px 16px 20px 16px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-    }
-
-    /* Character Profile Banner (VOICEVOX Style) */
-    .vv-speaker-card {
-      background: var(--vv-surface);
-      border: 1px solid var(--vv-border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      display: flex;
-      gap: 14px;
-      align-items: center;
-    }
-
-    .vv-avatar-wrapper {
-      position: relative;
-      width: 58px;
-      height: 58px;
-      flex-shrink: 0;
-    }
-
-    .vv-avatar-img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-      background: var(--vv-bg-alt);
-      border: 2px solid var(--vv-primary);
-    }
-
-    .vv-avatar-badge {
-      position: absolute;
-      bottom: -2px;
-      right: -2px;
-      background: var(--vv-primary-bright);
-      color: #1A2E05;
-      font-size: 9px;
-      font-weight: 800;
-      padding: 1px 4px;
-      border-radius: 6px;
-      border: 1px solid var(--vv-surface);
-    }
-
-    .vv-speaker-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .vv-speaker-name-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .vv-speaker-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: #FFFFFF;
-      letter-spacing: 0.2px;
-    }
-
-    .vv-speaker-cv {
-      font-size: 11px;
-      color: var(--vv-text-sub);
+      gap: 12px;
     }
 
     /* Style / Expression Pill Chips */
@@ -264,7 +144,7 @@
       border-color: var(--vv-primary);
     }
 
-    /* VOICEVOX Signature Parameter Inspector Rows */
+    /* Signature Parameter Inspector Rows */
     .vv-param-list {
       display: flex;
       flex-direction: column;
@@ -363,7 +243,7 @@
       font-weight: 700;
     }
 
-    /* VOICEVOX Style Switch Toggle */
+    /* Toggle Switch */
     .vv-switch-container {
       display: flex;
       align-items: center;
@@ -436,7 +316,7 @@
       transition: font-size 0.12s ease;
     }
 
-    /* VOICEVOX Script / Text Row (Editor Timeline Cell) */
+    /* Script / Text Row (Editor Timeline Cell) */
     .vv-cell-container {
       background: var(--vv-surface);
       border: 1px solid var(--vv-border);
@@ -509,52 +389,13 @@
     .vv-input-script::placeholder {
       color: var(--vv-text-dim);
     }
-
-    /* Footer Info */
-    .vv-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 11px;
-      color: var(--vv-text-dim);
-      padding: 0 4px;
-    }
   </style>
 </head>
 <body>
 
-  <!-- Top VOICEVOX Header -->
-  <div class="vv-header">
-    <div class="vv-header-left">
-      <span class="vv-logo-badge">VOICEVOX</span>
-      <span class="vv-header-title">
-        <span>ずんだもん 컴패니언 설정</span>
-      </span>
-    </div>
-    <div class="vv-status-indicator">
-      <div class="vv-status-dot" id="status-dot"></div>
-      <span id="status-engine">연결 중...</span>
-    </div>
-  </div>
-
   <div class="vv-container">
 
-    <!-- 1. Speaker Profile Banner -->
-    <div class="vv-speaker-card">
-      <div class="vv-avatar-wrapper">
-        <img class="vv-avatar-img" src="/static/vv_zundamon_icon.png" alt="Zundamon" onerror="this.src='/model/zundamon.2048/texture_00.png'">
-        <div class="vv-avatar-badge">ID: 3</div>
-      </div>
-      <div class="vv-speaker-info">
-        <div class="vv-speaker-name-row">
-          <div class="vv-speaker-name">ずんだもん (Zundamon)</div>
-          <span style="font-size: 10px; color: var(--vv-primary); font-weight: 600;">Cubism 4</span>
-        </div>
-        <div class="vv-speaker-cv">CV: 伊藤ゆいな / 東北ずん子プロジェクト</div>
-      </div>
-    </div>
-
-    <!-- 2. Styles / Expressions (VOICEVOX Style Pills) -->
+    <!-- 1. Styles / Expressions (Pill Chips) -->
     <div class="vv-panel">
       <div class="vv-panel-header">
         <span>🎭 캐릭터 스타일 / 표정 제어</span>
@@ -569,7 +410,7 @@
       </div>
     </div>
 
-    <!-- 3. VOICEVOX Parameter Inspector -->
+    <!-- 2. Parameter Inspector -->
     <div class="vv-panel">
       <div class="vv-panel-header">
         <span>🎛️ 디스플레이 & 모델 파라미터</span>
@@ -669,23 +510,16 @@
       </div>
     </div>
 
-    <!-- 4. VOICEVOX Speech Test (Script Cell UI) -->
+    <!-- 3. Speech Test (Script Cell UI) -->
     <div class="vv-cell-container">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size:12px; font-weight:700; color:var(--vv-primary);">💬 음성 합성 및 립싱크 테스트</span>
-        <span style="font-size:10px; color:var(--vv-text-dim);">VOICEVOX Engine ID: 3</span>
       </div>
       <div class="vv-script-box">
         <button class="vv-btn-play" id="btn-speak" title="발화하기">▶</button>
         <div class="vv-cell-num">1</div>
         <input type="text" id="inp-speech" class="vv-input-script" value="보쿠는 즌다몬인 것이다! 잘 부탁하는 것이다!" placeholder="테스트할 대사를 입력하세요...">
       </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="vv-footer">
-      <span>VOICEVOX Engine: 127.0.0.1:50021</span>
-      <span>Companion Server: 127.0.0.1:8989</span>
     </div>
 
   </div>
@@ -905,22 +739,6 @@
 
         const initScale = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
         applyScale(initScale, true);
-      })
-      .catch(() => {});
-
-    // Engine Health Sync
-    fetch('/api/health')
-      .then(r => r.json())
-      .then(d => {
-        const statusEngine = document.getElementById('status-engine');
-        const statusDot = document.getElementById('status-dot');
-        if (d.voicevox) {
-          statusEngine.textContent = 'VOICEVOX 0.25.1 接続中';
-          statusDot.style.background = 'var(--vv-primary-bright)';
-        } else {
-          statusEngine.textContent = 'VOICEVOX 대기 중';
-          statusDot.style.background = '#F59E0B';
-        }
       })
       .catch(() => {});
   </script>

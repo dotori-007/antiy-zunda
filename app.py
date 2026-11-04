@@ -95,10 +95,10 @@ class TrackerApi:
         if settings_window is None:
             try:
                 settings_window = webview.create_window(
-                    "VOICEVOX - ずんだもん 설정",
+                    "🌱 즌다몬 컴패니언 설정",
                     url="http://127.0.0.1:8989/settings",
                     width=470,
-                    height=720,
+                    height=580,
                     resizable=True,
                     on_top=True
                 )
