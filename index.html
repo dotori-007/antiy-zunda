@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Zundamon Companion</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: transparent !important;
+    }
+    #canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    #canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Zundamon Themed Subtitle - Clean Text Only (No Box Background) */
+    #subtitle {
+      position: absolute;
+      bottom: 12px;
+      left: 10px;
+      right: 10px;
+      background: transparent;
+      color: #7CFC00;
+      font-family: 'Pretendard', 'Malgun Gothic', 'Segoe UI', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+      padding: 4px 8px;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      text-align: center;
+      word-break: keep-all;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      -webkit-text-stroke: 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.6);
+      z-index: 20;
+    }
+    #subtitle.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Expression Toast Notification */
+    #toast {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-6px);
+      background: rgba(10, 26, 14, 0.92);
+      color: #4ADE80;
+      border: 1px solid rgba(74, 222, 128, 0.6);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: 'Pretendard', 'Malgun Gothic', 'Segoe UI', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6), 0 0 10px rgba(74, 222, 128, 0.35);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 25;
+      white-space: nowrap;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Quick Settings Trigger Button */
+    #btn-settings {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(10, 26, 14, 0.75);
+      color: #86EFAC;
+      border: 1px solid rgba(74, 222, 128, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 30;
+      opacity: 0.35;
+      transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    #btn-settings:hover {
+      opacity: 1;
+      color: #4ADE80;
+      background: rgba(10, 26, 14, 0.95);
+      border-color: #4ADE80;
+      box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+    }
+
+    /* Top-Left Corner Resize Grip */
+    #resize-grip {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4ADE80;
+      font-size: 12px;
+      cursor: nwse-resize;
+      z-index: 30;
+      opacity: 0.3;
+      transition: opacity 0.2s, color 0.2s;
+    }
+    #resize-grip:hover {
+      opacity: 1;
+      color: #86EFAC;
+    }
+
+    /* Zundamon Themed Settings Modal Panel */
+    #settings-modal {
+      position: absolute;
+      top: 45px;
+      right: 12px;
+      width: 300px;
+      max-height: calc(100vh - 70px);
+      overflow-y: auto;
+      background: rgba(10, 26, 14, 0.96);
+      border: 1px solid rgba(74, 222, 128, 0.55);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75), 0 0 16px rgba(34, 197, 94, 0.25);
+      color: #F0FDF4;
+      font-family: 'Malgun Gothic', 'Segoe UI', sans-serif;
+      font-size: 12px;
+      z-index: 40;
+      display: none;
+      animation: fadeIn 0.15s ease-out;
+    }
+    #settings-modal::-webkit-scrollbar {
+      width: 4px;
+    }
+    #settings-modal::-webkit-scrollbar-thumb {
+      background: rgba(74, 222, 128, 0.4);
+      border-radius: 4px;
+    }
+    #settings-modal.open {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #4ADE80;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(74, 222, 128, 0.25);
+      padding-bottom: 6px;
+    }
+    .modal-title .close-btn {
+      cursor: pointer;
+      color: #86EFAC;
+      font-size: 15px;
+    }
+    .modal-title .close-btn:hover {
+      color: #EF4444;
+    }
+    .modal-section {
+      margin-bottom: 13px;
+    }
+    .modal-label {
+      color: #86EFAC;
+      margin-bottom: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    .expr-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+    .btn-preset, .btn-expr {
+      background: rgba(20, 48, 28, 0.85);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      color: #DCFCE7;
+      padding: 5px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn-preset:hover, .btn-expr:hover {
+      background: rgba(34, 197, 94, 0.35);
+      border-color: #4ADE80;
+      color: #FFFFFF;
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+    }
+    .custom-inputs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .custom-inputs input {
+      width: 70px;
+      background: rgba(20, 48, 28, 0.9);
+      border: 1px solid rgba(74, 222, 128, 0.4);
+      color: #F0FDF4;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      text-align: center;
+    }
+    .custom-inputs input:focus {
+      outline: none;
+      border-color: #4ADE80;
+      box-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
+    }
+    .btn-apply {
+      background: #16A34A;
+      color: #FFFFFF;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      flex: 1;
+      transition: background 0.15s;
+    }
+    .btn-apply:hover {
+      background: #22C55E;
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+    }
+    .hint-box {
+      background: rgba(20, 48, 28, 0.6);
+      border-left: 3px solid #4ADE80;
+      padding: 7px 9px;
+      font-size: 11px;
+      color: #D1FAE5;
+      line-height: 1.45;
+      border-radius: 0 6px 6px 0;
+    }
+    .hint-box code {
+      color: #86EFAC;
+      font-weight: 700;
+    }
+    .btn-toggle {
+      background: rgba(20, 48, 28, 0.85);
+      border: 1px solid rgba(74, 222, 128, 0.4);
+      color: #86EFAC;
+      padding: 3px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-toggle.active {
+      background: #16A34A;
+      color: #FFFFFF;
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+      border-color: #4ADE80;
+    }
+    .btn-toggle.off {
+      background: rgba(40, 40, 40, 0.85);
+      color: #9CA3AF;
+      border-color: rgba(156, 163, 175, 0.3);
+      box-shadow: none;
+    }
+    .btn-sub-size {
+      background: rgba(20, 48, 28, 0.85);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      color: #DCFCE7;
+      padding: 4px 2px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .btn-sub-size:hover {
+      background: rgba(34, 197, 94, 0.35);
+      border-color: #4ADE80;
+    }
+    .btn-sub-size.active {
+      background: #16A34A;
+      color: #FFFFFF;
+      border-color: #4ADE80;
+      font-weight: 700;
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+    }
+  </style>
+  <script src="/static/live2dcubismcore.min.js"></script>
+  <script src="/static/pixi.min.js"></script>
+  <script src="/static/cubism4.min.js"></script>
+</head>
+<body>
+  <!-- Quick settings button removed upon user request -->
+  <div id="resize-grip" title="캔버스 크기 드래그 조절">⤡</div>
+  <div id="toast"></div>
+
+  <div id="settings-modal">
+    <div class="modal-title">
+      <span>🌱 즌다몬 설정</span>
+      <span class="close-btn" id="modal-close">&times;</span>
+    </div>
+
+    <!-- Expressions Section -->
+    <div class="modal-section">
+      <div class="modal-label">표정 변경 (단축키 Ctrl + 1~9)</div>
+      <div class="expr-grid" id="expr-buttons"></div>
+    </div>
+
+    <!-- Canvas Size Section -->
+    <div class="modal-section">
+      <div class="modal-label">캔버스 크기 프리셋</div>
+      <div class="preset-grid">
+        <div class="btn-preset" data-w="420" data-h="580">콤팩트 (420×580)</div>
+        <div class="btn-preset" data-w="560" data-h="750">기본 (560×750)</div>
+        <div class="btn-preset" data-w="700" data-h="920">대형 (700×920)</div>
+        <div class="btn-preset" data-w="850" data-h="1100">초대형 (850×1100)</div>
+      </div>
+      <div class="custom-inputs">
+        <input type="number" id="inp-w" placeholder="너비(W)" min="280" max="1920">
+        <span>×</span>
+        <input type="number" id="inp-h" placeholder="높이(H)" min="350" max="1440">
+        <button class="btn-apply" id="btn-apply-size">적용</button>
+      </div>
+    </div>
+
+    <!-- Subtitle Settings Section -->
+    <div class="modal-section">
+      <div class="modal-label" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>💬 자막바 표시 (ON / OFF)</span>
+        <button id="btn-toggle-sub" class="btn-toggle active" type="button">ON</button>
+      </div>
+      <div style="margin-top: 7px;">
+        <div class="modal-label" style="font-size: 10px; color: #86EFAC;">자막 크기 프리셋</div>
+        <div class="preset-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 6px;">
+          <div class="btn-sub-size" data-size="12">작게 (12)</div>
+          <div class="btn-sub-size active" data-size="14">기본 (14)</div>
+          <div class="btn-sub-size" data-size="17">크게 (17)</div>
+          <div class="btn-sub-size" data-size="20">특대 (20)</div>
+        </div>
+        <div class="custom-inputs" style="align-items: center;">
+          <input type="range" id="sub-size-slider" min="11" max="26" value="14" style="flex: 1; accent-color: #22C55E; cursor: pointer;">
+          <span id="sub-size-val" style="font-size: 11px; color: #86EFAC; width: 36px; text-align: right; font-weight: 600;">14px</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint-box">
+      <strong>단축키 가이드:</strong><br>
+      • <code>Ctrl + 1~9</code> : 표정 변경<br>
+      • <code>Ctrl + / -</code> : 캐릭터 배율 0.1씩 조절<br>
+      • <code>Ctrl + [ / ]</code> : 캔버스 ±50px 조절<br>
+      • <code>Ctrl + P / ,</code> : 설정창 열기/닫기<br>
+      • <code>Ctrl + 0</code> : 배율 및 표정 초기화<br>
+      • <code>마우스 좌클릭 드래그</code> : 화면 이동
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+  <div id="subtitle"></div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const subtitleEl = document.getElementById('subtitle');
+    const toastEl = document.getElementById('toast');
+    const settingsModal = document.getElementById('settings-modal');
+    const btnSettings = document.getElementById('btn-settings');
+    const modalClose = document.getElementById('modal-close');
+    const inpW = document.getElementById('inp-w');
+    const inpH = document.getElementById('inp-h');
+    const btnApplySize = document.getElementById('btn-apply-size');
+    const resizeGrip = document.getElementById('resize-grip');
+    const exprButtonsContainer = document.getElementById('expr-buttons');
+    const btnToggleSub = document.getElementById('btn-toggle-sub');
+    const subSizeSlider = document.getElementById('sub-size-slider');
+    const subSizeVal = document.getElementById('sub-size-val');
+    const btnSubSizes = document.querySelectorAll('.btn-sub-size');
+
+    // Subtitle Settings State
+    let isSubtitleEnabled = localStorage.getItem('zundamon_sub_enabled') !== '0';
+    let currentSubtitleSize = parseInt(localStorage.getItem('zundamon_sub_size') || '14', 10);
+    if (isNaN(currentSubtitleSize) || currentSubtitleSize < 10) currentSubtitleSize = 14;
+
+    function applySubtitleSettings(saveServer = true) {
+      if (btnToggleSub) {
+        if (isSubtitleEnabled) {
+          btnToggleSub.textContent = 'ON';
+          btnToggleSub.className = 'btn-toggle active';
+        } else {
+          btnToggleSub.textContent = 'OFF';
+          btnToggleSub.className = 'btn-toggle off';
+          subtitleEl.classList.remove('show');
+        }
+      }
+
+      subtitleEl.style.fontSize = currentSubtitleSize + 'px';
+      subtitleEl.style.padding = '4px 8px';
+
+      if (subSizeSlider) subSizeSlider.value = currentSubtitleSize;
+      if (subSizeVal) subSizeVal.textContent = currentSubtitleSize + 'px';
+
+      if (btnSubSizes) {
+        btnSubSizes.forEach(btn => {
+          if (parseInt(btn.dataset.size, 10) === currentSubtitleSize) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      }
+
+      localStorage.setItem('zundamon_sub_enabled', isSubtitleEnabled ? '1' : '0');
+      localStorage.setItem('zundamon_sub_size', currentSubtitleSize.toString());
+
+      if (saveServer) {
+        fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subtitle_enabled: isSubtitleEnabled,
+            subtitle_size: currentSubtitleSize
+          })
+        }).catch(() => {});
+      }
+    }
+
+    let subPreviewTimeout = null;
+    function previewSubtitle() {
+      if (!isSubtitleEnabled) return;
+      subtitleEl.textContent = `🌱 보쿠는 즌다몬인 것이다! (${currentSubtitleSize}px)`;
+      subtitleEl.classList.add('show');
+      if (subPreviewTimeout) clearTimeout(subPreviewTimeout);
+      subPreviewTimeout = setTimeout(() => {
+        if (!isSpeaking) subtitleEl.classList.remove('show');
+      }, 2000);
+    }
+
+    if (btnToggleSub) {
+      btnToggleSub.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isSubtitleEnabled = !isSubtitleEnabled;
+        applySubtitleSettings(true);
+        if (isSubtitleEnabled) {
+          showToast('💬 자막바: ON');
+          previewSubtitle();
+        } else {
+          showToast('💬 자막바: OFF');
+        }
+      });
+    }
+
+    if (subSizeSlider) {
+      subSizeSlider.addEventListener('input', (e) => {
+        currentSubtitleSize = parseInt(e.target.value, 10);
+        applySubtitleSettings(true);
+        previewSubtitle();
+      });
+    }
+
+    if (btnSubSizes) {
+      btnSubSizes.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentSubtitleSize = parseInt(btn.dataset.size, 10);
+          applySubtitleSettings(true);
+          previewSubtitle();
+        });
+      });
+    }
+
+    // Initial subtitle state
+    applySubtitleSettings(false);
+
+    const app = new PIXI.Application({
+      view: canvas,
+      autoStart: true,
+      backgroundAlpha: 0,
+      transparent: true,
+      resizeTo: window
+    });
+
+    let live2dModel = null;
+    let audioCtx = null;
+    let analyser = null;
+    let dataArray = null;
+    let isSpeaking = false;
+    let activeAudio = null;
+
+    // Expressions Map for Ctrl + 1 ~ 9
+    const expressionsList = [
+      { key: '1', id: 'exp_smile', name: '미소', icon: '😊' },
+      { key: '2', id: 'exp_laugh', name: '활짝', icon: '😆' },
+      { key: '3', id: 'exp_shy', name: '부끄', icon: '😳' },
+      { key: '4', id: 'exp_surprise', name: '깜짝', icon: '😲' },
+      { key: '5', id: 'exp_angry', name: '삐짐', icon: '😤' },
+      { key: '6', id: 'exp_sad', name: '시무룩', icon: '🥺' },
+      { key: '7', id: 'exp_sleep', name: '졸림', icon: '😴' },
+      { key: '8', id: 'exp_01', name: '초롱', icon: '✨' },
+      { key: '9', id: 'exp_laugh2', name: '신남', icon: '🥳' },
+      { key: '0', id: 'exp_smile', name: '초기화', icon: '🌱' }
+    ];
+
+    let toastTimer = null;
+    function showToast(msg) {
+      if (!toastEl) return;
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, 1600);
+    }
+
+    function applyExpression(exprObj) {
+      if (!live2dModel) return;
+      try {
+        live2dModel.expression(exprObj.id);
+      } catch(e) {}
+    }
+
+    // Populate Expression Buttons in Settings Modal
+    expressionsList.slice(0, 9).forEach(expr => {
+      const btn = document.createElement('div');
+      btn.className = 'btn-expr';
+      btn.innerHTML = `${expr.key}. ${expr.icon} ${expr.name}`;
+      btn.title = `Ctrl + ${expr.key} : ${expr.name}`;
+      btn.addEventListener('click', () => {
+        applyExpression(expr);
+      });
+      exprButtonsContainer.appendChild(btn);
+    });
+
+    // Zoom/scale level persisted in localStorage
+    let currentScaleMultiplier = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
+
+    function resizeModel() {
+      if (!live2dModel) return;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const baseScale = Math.min(w / live2dModel.width, h / live2dModel.height) * 1.35;
+      const finalScale = baseScale * currentScaleMultiplier;
+      live2dModel.scale.set(finalScale);
+      live2dModel.anchor.set(0.5, 0.5);
+      live2dModel.position.set(w / 2, h / 2 + 35 * currentScaleMultiplier);
+    }
+
+    function changeScale(delta) {
+      let nextScale = Math.round((currentScaleMultiplier + delta) * 10) / 10;
+      currentScaleMultiplier = Math.max(0.4, Math.min(3.5, nextScale));
+      localStorage.setItem('zundamon_zoom', currentScaleMultiplier.toFixed(1));
+      resizeModel();
+      showToast(`🔍 배율: ${currentScaleMultiplier.toFixed(1)}x`);
+    }
+
+    function resetScale() {
+      currentScaleMultiplier = 1.0;
+      localStorage.setItem('zundamon_zoom', '1.0');
+      resizeModel();
+      applyExpression(expressionsList[0]);
+      showToast(`🌱 기본 상태로 초기화 (1.0x)`);
+    }
+
+    // Dynamic Window/Canvas Resizing
+    function setCanvasDimensions(w, h) {
+      w = Math.max(280, Math.min(1920, parseInt(w) || 560));
+      h = Math.max(350, Math.min(1440, parseInt(h) || 750));
+      inpW.value = w;
+      inpH.value = h;
+
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.resize_window) {
+        window.pywebview.api.resize_window(w, h);
+      }
+      fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ win_w: w, win_h: h })
+      }).catch(() => {});
+
+      setTimeout(resizeModel, 80);
+      showToast(`📐 캔버스: ${w} × ${h}px`);
+    }
+
+    // Load initial config from server
+    fetch('/api/config')
+      .then(r => r.json())
+      .then(cfg => {
+        inpW.value = cfg.win_w || window.innerWidth;
+        inpH.value = cfg.win_h || window.innerHeight;
+        if (typeof cfg.subtitle_enabled === 'boolean') {
+          isSubtitleEnabled = cfg.subtitle_enabled;
+        }
+        if (cfg.subtitle_size) {
+          currentSubtitleSize = parseInt(cfg.subtitle_size, 10);
+        }
+        applySubtitleSettings(false);
+      })
+      .catch(() => {
+        inpW.value = window.innerWidth;
+        inpH.value = window.innerHeight;
+      });
+
+    // Settings Modal Toggle (Shortcut Ctrl + P / Ctrl + , or via button if present)
+    if (btnSettings) {
+      btnSettings.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsModal.classList.toggle('open');
+        inpW.value = window.innerWidth;
+        inpH.value = window.innerHeight;
+      });
+    }
+
+    modalClose.addEventListener('click', () => {
+      settingsModal.classList.remove('open');
+    });
+
+    document.querySelectorAll('.btn-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setCanvasDimensions(btn.dataset.w, btn.dataset.h);
+        settingsModal.classList.remove('open');
+      });
+    });
+
+    btnApplySize.addEventListener('click', () => {
+      setCanvasDimensions(inpW.value, inpH.value);
+      settingsModal.classList.remove('open');
+    });
+
+    window.addEventListener('click', (e) => {
+      if (settingsModal && !settingsModal.contains(e.target) && (!btnSettings || e.target !== btnSettings)) {
+        settingsModal.classList.remove('open');
+      }
+    });
+
+    // Top-left Corner Drag Resize
+    let isCornerResizing = false;
+    let startGripX = 0, startGripY = 0;
+    let startGripW = 0, startGripH = 0;
+
+    resizeGrip.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      isCornerResizing = true;
+      startGripX = e.screenX;
+      startGripY = e.screenY;
+      startGripW = window.innerWidth;
+      startGripH = window.innerHeight;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isCornerResizing) {
+        const dx = startGripX - e.screenX;
+        const dy = startGripY - e.screenY;
+        const newW = Math.max(280, Math.min(1920, startGripW + dx));
+        const newH = Math.max(350, Math.min(1440, startGripH + dy));
+        inpW.value = newW;
+        inpH.value = newH;
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.resize_window) {
+          window.pywebview.api.resize_window(newW, newH);
+        }
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isCornerResizing) {
+        isCornerResizing = false;
+        setCanvasDimensions(inpW.value, inpH.value);
+      }
+    });
+
+    // Load Zundamon Model
+    PIXI.live2d.Live2DModel.from('/model/zundamon.model3.json', { autoInteract: false })
+      .then(model => {
+        live2dModel = model;
+        app.stage.addChild(model);
+
+        resizeModel();
+        window.addEventListener('resize', resizeModel);
+
+        console.log('Zundamon Live2D loaded successfully!');
+        fetch('/api/model_loaded').catch(() => {});
+      })
+      .catch(err => {
+        console.error('Failed to load Live2D model:', err);
+        fetch('/api/model_error?err=' + encodeURIComponent(err.toString())).catch(() => {});
+      });
+
+    // Keyboard Shortcuts: Ctrl + 1~9, Ctrl +/-, Ctrl [/]
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey) {
+        // 1. Expressions: Ctrl + 1 ~ 9 and Ctrl + 0
+        const foundExpr = expressionsList.find(x => e.key === x.key || e.code === 'Digit' + x.key || e.code === 'Numpad' + x.key);
+        if (foundExpr) {
+          e.preventDefault();
+          if (foundExpr.key === '0') {
+            resetScale();
+          } else {
+            applyExpression(foundExpr);
+          }
+          return;
+        }
+
+        // 2. Scale adjustment by 0.1
+        if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd' || e.code === 'Equal') {
+          e.preventDefault();
+          changeScale(0.1);
+        } else if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract' || e.code === 'Minus') {
+          e.preventDefault();
+          changeScale(-0.1);
+        }
+        // 3. Canvas boundary adjustment by 50px
+        else if (e.key === ']' || e.code === 'BracketRight') {
+          e.preventDefault();
+          setCanvasDimensions(window.innerWidth + 50, window.innerHeight + 50);
+        } else if (e.key === '[' || e.code === 'BracketLeft') {
+          e.preventDefault();
+          setCanvasDimensions(window.innerWidth - 50, window.innerHeight - 50);
+        } else if (e.key === ',' || e.key === 'p' || e.key === 'P') {
+          e.preventDefault();
+          settingsModal.classList.toggle('open');
+        } else if (e.key === 'u' || e.key === 'U') {
+          e.preventDefault();
+          isSubtitleEnabled = !isSubtitleEnabled;
+          applySubtitleSettings(true);
+          if (isSubtitleEnabled) {
+            showToast('💬 자막바: ON');
+            previewSubtitle();
+          } else {
+            showToast('💬 자막바: OFF');
+          }
+        }
+      }
+    });
+
+    // Completely disable mouse wheel zoom
+    window.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }, { passive: false });
+
+    // Click reaction dialogue and motions
+    const clickVoiceLines = [
+      "와앗! 간지러운 것이다!",
+      "보쿠를 왜 찌르는 것인가?!",
+      "에헤헤~ 무슨 일인 것이다?",
+      "놀래키지 마는 것이다!",
+      "보쿠는 언제나 곁에 있는 것이다!",
+      "얍! 보쿠는 끄떡없는 것이다!",
+      "보쿠에게 관심이 많은 모양인 것이다~"
+    ];
+    const clickMotions = [
+      'mtnBody_laugh', 'mtnBody_laugh2', 'mtnBody_laugh3',
+      'mtnBody_wave', 'mtnBody_wave2', 'mtnBody_point', 'mtnBody_point2',
+      'mtnFace_shy', 'mtnFace_laugh', 'mtnFace_surprise', 'mtnBody_yes'
+    ];
+
+    let lastClickTime = 0;
+    function triggerClickReaction() {
+      const now = Date.now();
+      if (now - lastClickTime < 1400) return;
+      lastClickTime = now;
+
+      if (live2dModel) {
+        try {
+          const m = clickMotions[Math.floor(Math.random() * clickMotions.length)];
+          live2dModel.motion('', m);
+        } catch(e) {}
+      }
+
+      const text = clickVoiceLines[Math.floor(Math.random() * clickVoiceLines.length)];
+      fetch('/api/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text, speaker: 3 })
+      }).catch(() => {});
+    }
+
+    // Left click & Drag-to-move handling
+    let leftDownX = 0, leftDownY = 0;
+    let leftDownTime = 0;
+    let isLeftDragging = false;
+    let dragPrevX = 0, dragPrevY = 0;
+
+    canvas.addEventListener('mousedown', (e) => {
+      window.focus();
+      if (e.button === 0) {
+        leftDownX = e.screenX;
+        leftDownY = e.screenY;
+        dragPrevX = e.screenX;
+        dragPrevY = e.screenY;
+        leftDownTime = Date.now();
+        isLeftDragging = false;
+      }
+    });
+
+    // Right-click dragging
+    let isRightDragging = false;
+    let dragStartX = 0, dragStartY = 0;
+
+    window.addEventListener('mousedown', (e) => {
+      if (e.button === 2) {
+        isRightDragging = true;
+        dragStartX = e.screenX;
+        dragStartY = e.screenY;
+        document.body.style.cursor = 'move';
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (e.buttons === 1 && !isCornerResizing) {
+        const totalDist = Math.hypot(e.screenX - leftDownX, e.screenY - leftDownY);
+        if (totalDist > 4) {
+          isLeftDragging = true;
+          document.body.style.cursor = 'move';
+          const dx = e.screenX - dragPrevX;
+          const dy = e.screenY - dragPrevY;
+          dragPrevX = e.screenX;
+          dragPrevY = e.screenY;
+          if (window.pywebview && window.pywebview.api && window.pywebview.api.move_window) {
+            window.pywebview.api.move_window(dx, dy);
+          }
+        }
+      } else if (isRightDragging && window.pywebview && window.pywebview.api && window.pywebview.api.move_window) {
+        const dx = e.screenX - dragStartX;
+        const dy = e.screenY - dragStartY;
+        dragStartX = e.screenX;
+        dragStartY = e.screenY;
+        window.pywebview.api.move_window(dx, dy);
+      }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      document.body.style.cursor = 'default';
+      if (e.button === 0) {
+        const totalDist = Math.hypot(e.screenX - leftDownX, e.screenY - leftDownY);
+        const elapsed = Date.now() - leftDownTime;
+        if (!isLeftDragging && totalDist <= 4 && elapsed < 400) {
+          triggerClickReaction();
+        }
+        isLeftDragging = false;
+      }
+      if (e.button === 2) {
+        isRightDragging = false;
+      }
+    });
+
+    window.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+
+    // Global Mouse Tracking with Forward (정면) Default
+    let isTrackingActive = false;
+    async function startGlobalMouseTracking() {
+      if (isTrackingActive) return;
+      isTrackingActive = true;
+
+      while (true) {
+        try {
+          if (window.pywebview && window.pywebview.api && live2dModel && live2dModel.internalModel && live2dModel.internalModel.focusController) {
+            const data = await window.pywebview.api.get_tracking();
+            if (data && typeof data.fx === 'number') {
+              live2dModel.internalModel.focusController.focus(data.fx, data.fy);
+            }
+          }
+        } catch(e) {}
+        await new Promise(resolve => setTimeout(resolve, 16));
+      }
+    }
+
+    window.addEventListener('pywebviewready', () => {
+      startGlobalMouseTracking();
+    });
+    setTimeout(startGlobalMouseTracking, 800);
+
+    // Real-time Lip-Sync Hook via Analyser
+    app.ticker.add(() => {
+      if (!live2dModel || !live2dModel.internalModel || !live2dModel.internalModel.coreModel) return;
+      const core = live2dModel.internalModel.coreModel;
+
+      if (isSpeaking && analyser && dataArray) {
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        let count = 0;
+        for (let i = 2; i < 40 && i < dataArray.length; i++) {
+          sum += dataArray[i];
+          count++;
+        }
+        const avg = count > 0 ? (sum / count) : 0;
+        let mouthOpen = Math.min(1.0, (avg / 100) * 1.25);
+        if (mouthOpen < 0.08) mouthOpen = 0;
+
+        core.setParameterValueById('ParamMouthOpenY', mouthOpen);
+      }
+    });
+
+    // Speak Function: Plays audio buffer with lipsync & subtitle
+    function speakAudio(audioUrl, text) {
+      if (activeAudio) {
+        activeAudio.pause();
+        activeAudio = null;
+      }
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      }
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const audio = new Audio(audioUrl);
+      activeAudio = audio;
+
+      const source = audioCtx.createMediaElementSource(audio);
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+
+      if (text && isSubtitleEnabled) {
+        subtitleEl.textContent = text;
+        subtitleEl.classList.add('show');
+      }
+
+      isSpeaking = true;
+
+      if (live2dModel) {
+        try {
+          const talkMotions = ['mtnFace_talk', 'mtnBody_point', 'mtnBody_wave', 'mtnBody_yes'];
+          const tm = talkMotions[Math.floor(Math.random() * talkMotions.length)];
+          live2dModel.motion('', tm);
+        } catch(e) {}
+      }
+
+      audio.onended = () => {
+        isSpeaking = false;
+        subtitleEl.classList.remove('show');
+        if (live2dModel && live2dModel.internalModel && live2dModel.internalModel.coreModel) {
+          live2dModel.internalModel.coreModel.setParameterValueById('ParamMouthOpenY', 0);
+        }
+      };
+
+      audio.play().catch(e => console.error('Audio play error:', e));
+    }
+
+    // Polling speech queue from local server
+    let lastAudioId = 0;
+    async function checkSpeechQueue() {
+      try {
+        const res = await fetch('/api/poll_speech?last=' + lastAudioId);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.audioId && data.audioId > lastAudioId) {
+            lastAudioId = data.audioId;
+            speakAudio(data.audioUrl, data.text);
+          }
+        }
+      } catch(e) {}
+      setTimeout(checkSpeechQueue, 80);
+    }
+
+    setTimeout(checkSpeechQueue, 300);
+  </script>
+</body>
+</html>

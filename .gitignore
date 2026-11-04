@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VOICEVOX Heavy Engine (Download separately from official website)
+vv-engine/
+*.nsis
+
+# Audio cache generated at runtime
+audio_cache/
+*.wav
+
+# User runtime logs
+*.log
+crash.log
+app_err.log
+app_out.log
+
+# User local UI configs
+config.json
+
+# WebView2 temporary cache
+zundamon_wv2_data/
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE & OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
