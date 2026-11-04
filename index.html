@@ -112,27 +112,7 @@
       box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
     }
 
-    /* Top-Left Corner Resize Grip */
-    #resize-grip {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #4ADE80;
-      font-size: 12px;
-      cursor: nwse-resize;
-      z-index: 30;
-      opacity: 0.3;
-      transition: opacity 0.2s, color 0.2s;
-    }
-    #resize-grip:hover {
-      opacity: 1;
-      color: #86EFAC;
-    }
+
 
     /* Zundamon Themed Settings Modal Panel */
     #settings-modal {
@@ -327,8 +307,6 @@
   <script src="/static/cubism4.min.js"></script>
 </head>
 <body>
-  <!-- Quick settings button removed upon user request -->
-  <div id="resize-grip" title="캔버스 크기 드래그 조절">⤡</div>
   <div id="toast"></div>
 
   <div id="settings-modal">
@@ -405,7 +383,6 @@
     const inpW = document.getElementById('inp-w');
     const inpH = document.getElementById('inp-h');
     const btnApplySize = document.getElementById('btn-apply-size');
-    const resizeGrip = document.getElementById('resize-grip');
     const exprButtonsContainer = document.getElementById('expr-buttons');
     const btnToggleSub = document.getElementById('btn-toggle-sub');
     const subSizeSlider = document.getElementById('sub-size-slider');
@@ -667,42 +644,6 @@
       }
     });
 
-    // Top-left Corner Drag Resize
-    let isCornerResizing = false;
-    let startGripX = 0, startGripY = 0;
-    let startGripW = 0, startGripH = 0;
-
-    resizeGrip.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      isCornerResizing = true;
-      startGripX = e.screenX;
-      startGripY = e.screenY;
-      startGripW = window.innerWidth;
-      startGripH = window.innerHeight;
-    });
-
-    window.addEventListener('mousemove', (e) => {
-      if (isCornerResizing) {
-        const dx = startGripX - e.screenX;
-        const dy = startGripY - e.screenY;
-        const newW = Math.max(280, Math.min(1920, startGripW + dx));
-        const newH = Math.max(350, Math.min(1440, startGripH + dy));
-        inpW.value = newW;
-        inpH.value = newH;
-        if (window.pywebview && window.pywebview.api && window.pywebview.api.resize_window) {
-          window.pywebview.api.resize_window(newW, newH);
-        }
-      }
-    });
-
-    window.addEventListener('mouseup', () => {
-      if (isCornerResizing) {
-        isCornerResizing = false;
-        setCanvasDimensions(inpW.value, inpH.value);
-      }
-    });
-
     // Load Zundamon Model
     PIXI.live2d.Live2DModel.from('/model/zundamon.model3.json', { autoInteract: false })
       .then(model => {
@@ -842,7 +783,7 @@
     });
 
     window.addEventListener('mousemove', (e) => {
-      if (e.buttons === 1 && !isCornerResizing) {
+      if (e.buttons === 1) {
         const totalDist = Math.hypot(e.screenX - leftDownX, e.screenY - leftDownY);
         if (totalDist > 4) {
           isLeftDragging = true;
