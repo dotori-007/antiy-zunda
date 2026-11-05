@@ -15,6 +15,9 @@ from ctypes import wintypes
 from bottle import Bottle, request, response, static_file
 import webview
 
+
+
+
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
@@ -151,42 +154,88 @@ class TrackerApi:
     def set_hwnd(self, hwnd):
         self.hwnd = hwnd
 
-    def open_settings(self):
+    def close_settings(self):
         global settings_window
-        log_msg("open_settings requested")
-        if settings_window is None:
-            try:
-                settings_window = webview.create_window(
-                    "🌱 즌다몬 컴패니언 설정",
-                    url="http://127.0.0.1:8989/settings",
-                    width=470,
-                    height=580,
-                    resizable=True,
-                    on_top=True
-                )
-                def on_settings_closed():
-                    global settings_window
-                    log_msg("settings_window closed")
-                    settings_window = None
-                settings_window.events.closed += on_settings_closed
-                return True
-            except Exception as e:
-                log_msg(f"create settings_window error: {e}")
-                return False
-        else:
+        log_msg("close_settings requested")
+        if settings_window is not None:
             try:
                 import webview.platforms.winforms as wf
                 from System import Action
                 inst = wf.BrowserView.instances.get(settings_window.uid)
-                if inst:
-                    hwnd = inst.Handle.ToInt64()
-                    user32.ShowWindow(hwnd, 9)  # SW_RESTORE
-                    user32.SetForegroundWindow(hwnd)
-                    inst.Invoke(Action(lambda: (inst.BringToFront(), inst.Activate())))
-                    return True
+                if inst is not None and not inst.IsDisposed and inst.IsHandleCreated:
+                    try:
+                        inst.Invoke(Action(lambda: inst.Close()))
+                    except Exception:
+                        try:
+                            settings_window.destroy()
+                        except Exception:
+                            pass
+                else:
+                    try:
+                        settings_window.destroy()
+                    except Exception:
+                        pass
             except Exception as e:
-                log_msg(f"activate settings_window error: {e}")
+                log_msg(f"close_settings error: {e}")
+            settings_window = None
             return True
+        return False
+
+    def toggle_settings(self):
+        global settings_window
+        log_msg("toggle_settings requested")
+        if settings_window is not None:
+            try:
+                import webview.platforms.winforms as wf
+                from System import Action
+                inst = wf.BrowserView.instances.get(settings_window.uid)
+                if inst is not None and not inst.IsDisposed and inst.IsHandleCreated:
+                    hwnd = inst.Handle.ToInt64()
+                    if user32.IsWindow(hwnd):
+                        log_msg("settings_window is open -> closing (toggle)")
+                        try:
+                            inst.Invoke(Action(lambda: inst.Close()))
+                        except Exception:
+                            try:
+                                settings_window.destroy()
+                            except Exception:
+                                pass
+                        settings_window = None
+                        return False
+            except Exception as e:
+                log_msg(f"close settings_window error: {e}")
+            settings_window = None
+
+        log_msg("settings_window is not open -> creating")
+        try:
+            settings_window = webview.create_window(
+                "🌱 즌다몬 컴패니언 설정",
+                url="http://127.0.0.1:8989/settings",
+                width=470,
+                height=580,
+                resizable=True,
+                on_top=True,
+                js_api=self
+            )
+            def on_settings_closed():
+                global settings_window
+                log_msg("settings_window closed")
+                settings_window = None
+            settings_window.events.closed += on_settings_closed
+            return True
+        except Exception as e:
+            log_msg(f"create settings_window error: {e}")
+            settings_window = None
+            try:
+                import webbrowser
+                webbrowser.open("http://127.0.0.1:8989/settings")
+                return True
+            except Exception as wb_err:
+                log_msg(f"webbrowser fallback error: {wb_err}")
+                return False
+
+    def open_settings(self):
+        return self.toggle_settings()
 
     def start_drag(self):
         if self.hwnd and user32.IsWindow(self.hwnd):
@@ -313,7 +362,13 @@ def load_config():
         "subtitle_enabled": True,
         "subtitle_size": 14,
         "display_mode": "bubble",
-        "resource_alert": True
+        "resource_alert": True,
+        "subtitle_mode": True,
+        "voice_speed": 1.0,
+        "voice_pitch": 0.0,
+        "voice_intonation": 1.0,
+        "voice_volume": 1.0,
+        "voice_pause": 0.35
     }
     if os.path.exists(CONFIG_PATH):
         try:
@@ -334,15 +389,23 @@ def save_config(cfg):
         log_msg(f"save_config error: {e}")
 
 
-# Fast synthesis with MD5 hash caching
-def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=None, motion=None):
+# Fast synthesis with MD5 hash caching and configurable voice parameters
+def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=None, motion=None,
+                        speed=None, pitch=None, intonation=None, volume=None, pause=None):
     global current_audio_id, latest_audio_info
 
     if display_text is None:
         display_text = synth_text
 
-    # 1. Fast Cache Check
-    cache_key = hashlib.md5(f"{speaker}:{synth_text}".encode("utf-8")).hexdigest()
+    cfg = load_config()
+    v_speed = float(speed if speed is not None else cfg.get("voice_speed", 1.0))
+    v_pitch = float(pitch if pitch is not None else cfg.get("voice_pitch", 0.0))
+    v_intonation = float(intonation if intonation is not None else cfg.get("voice_intonation", 1.0))
+    v_volume = float(volume if volume is not None else cfg.get("voice_volume", 1.0))
+    v_pause = float(pause if pause is not None else cfg.get("voice_pause", 0.35))
+
+    # 1. Fast Cache Check with voice parameter hash
+    cache_key = hashlib.md5(f"v4:{speaker}:{synth_text}:{v_speed:.2f}:{v_pitch:.2f}:{v_intonation:.2f}:{v_volume:.2f}:{v_pause:.2f}".encode("utf-8")).hexdigest()
     cached_name = f"cached_{cache_key}.wav"
     cached_path = os.path.join(AUDIO_DIR, cached_name)
 
@@ -364,6 +427,23 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=Non
     req = urllib.request.Request(query_url, method="POST")
     with urllib.request.urlopen(req, timeout=8) as resp:
         query_data = resp.read()
+
+    # Apply voice parameters: speed, pitch, intonation, volume, and pause duration
+    try:
+        q_json = json.loads(query_data.decode("utf-8"))
+        q_json["speedScale"] = v_speed
+        q_json["pitchScale"] = v_pitch
+        q_json["intonationScale"] = v_intonation
+        q_json["volumeScale"] = v_volume
+        q_json["pauseLengthScale"] = v_pause
+        for ap in q_json.get("accent_phrases", []):
+            pm = ap.get("pause_mora")
+            if pm and "vowel_length" in pm and pm["vowel_length"] is not None:
+                # Scale pause length according to voice_pause setting
+                pm["vowel_length"] = min(pm["vowel_length"] * v_pause, max(0.08, 0.35 * v_pause))
+        query_data = json.dumps(q_json).encode("utf-8")
+    except Exception as qe:
+        log_msg(f"audio_query parameter adjustment error: {qe}")
 
     synth_url = f"{VOICEVOX_URL}/synthesis?speaker={speaker}"
     synth_req = urllib.request.Request(synth_url, data=query_data,
@@ -398,10 +478,17 @@ def serve_settings():
     return static_file("settings.html", root=APP_DIR)
 
 @app.route("/api/open_settings", method=["GET", "POST"])
-def api_open_settings():
+@app.route("/api/toggle_settings", method=["GET", "POST"])
+def api_toggle_settings():
     response.content_type = "application/json"
-    res = tracker_api.open_settings()
-    return json.dumps({"success": bool(res)})
+    res = tracker_api.toggle_settings()
+    return json.dumps({"success": True, "open": bool(res)})
+
+@app.route("/api/close_settings", method=["GET", "POST"])
+def api_close_settings():
+    response.content_type = "application/json"
+    res = tracker_api.close_settings()
+    return json.dumps({"success": True, "closed": bool(res)})
 
 
 @app.route("/static/<filename:path>")
@@ -472,6 +559,10 @@ def api_config():
             tracker_api.resize_window(cfg["win_w"], cfg["win_h"])
         if "subtitle_enabled" in data:
             cfg["subtitle_enabled"] = bool(data["subtitle_enabled"])
+            cfg["subtitle_mode"] = cfg["subtitle_enabled"]
+        if "subtitle_mode" in data:
+            cfg["subtitle_mode"] = bool(data["subtitle_mode"])
+            cfg["subtitle_enabled"] = cfg["subtitle_mode"]
         if "subtitle_size" in data:
             try:
                 cfg["subtitle_size"] = max(10, min(36, int(data["subtitle_size"])))
@@ -481,6 +572,13 @@ def api_config():
             cfg["display_mode"] = str(data["display_mode"])
         if "resource_alert" in data:
             cfg["resource_alert"] = bool(data["resource_alert"])
+        for vk in ["voice_speed", "voice_pitch", "voice_intonation", "voice_volume", "voice_pause"]:
+            if vk in data:
+                try:
+                    cfg[vk] = float(data[vk])
+                except Exception:
+                    pass
+
         save_config(cfg)
         return json.dumps(cfg)
     return json.dumps(cfg)
@@ -511,7 +609,10 @@ def api_speak():
         synth_text = text
 
     try:
-        info = synthesize_voicevox(synth_text, speaker, display_text=display_text, expression=expression, motion=motion)
+        info = synthesize_voicevox(synth_text, speaker, display_text=display_text, expression=expression, motion=motion,
+                                   speed=data.get("voice_speed"), pitch=data.get("voice_pitch"),
+                                   intonation=data.get("voice_intonation"), volume=data.get("voice_volume"),
+                                   pause=data.get("voice_pause"))
         return json.dumps({"success": True, "info": info})
     except Exception as e:
         return json.dumps({"error": str(e)})
@@ -559,6 +660,7 @@ class ResourceMonitor:
                 time.sleep(20)
 
 resource_monitor = ResourceMonitor()
+
 
 def run_server():
     try:

@@ -163,6 +163,9 @@
     let currentSubtitleSize = parseInt(localStorage.getItem('zundamon_sub_size') || '14', 10);
     if (isNaN(currentSubtitleSize) || currentSubtitleSize < 10) currentSubtitleSize = 14;
 
+    // Operation Modes
+    let subtitleMode = localStorage.getItem('zundamon_sub_mode') !== '0';
+
     function applyDisplaySettings(saveServer = true) {
       if (subtitleEl) subtitleEl.style.fontSize = currentSubtitleSize + 'px';
       if (bubbleTextEl) bubbleTextEl.style.fontSize = Math.min(16, currentSubtitleSize) + 'px';
@@ -329,13 +332,17 @@
       showToast(`📐 캔버스: ${w} × ${h}px`);
     }
 
-    // Open Separate Settings Window
-    function openSettingsWindow() {
-      if (window.pywebview && window.pywebview.api && window.pywebview.api.open_settings) {
-        window.pywebview.api.open_settings();
-      } else {
-        fetch('/api/open_settings').catch(() => {});
+    // Toggle Separate Settings Window (Ctrl + ,)
+    function toggleSettingsWindow() {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.toggle_settings) {
+        try {
+          window.pywebview.api.toggle_settings();
+          return;
+        } catch(e) {}
       }
+      fetch('/api/toggle_settings', { method: 'POST' }).catch(() => {
+        fetch('/api/toggle_settings').catch(() => {});
+      });
     }
 
     // Cross-Window Real-time Communication Channel
@@ -369,6 +376,10 @@
         currentSubtitleSize = data.size;
         applyDisplaySettings(false);
         previewSubtitle();
+      } else if (data.type === 'subtitle_mode_toggle') {
+        subtitleMode = !!data.enabled;
+        localStorage.setItem('zundamon_sub_mode', subtitleMode ? '1' : '0');
+        showToast(subtitleMode ? '💬 자막 모드: ON' : '💬 자막 모드: OFF');
       }
     };
 
@@ -379,6 +390,11 @@
         if (typeof cfg.subtitle_enabled === 'boolean') {
           isSubtitleEnabled = cfg.subtitle_enabled;
         }
+        if (typeof cfg.subtitle_mode === 'boolean') {
+          subtitleMode = cfg.subtitle_mode;
+          localStorage.setItem('zundamon_sub_mode', subtitleMode ? '1' : '0');
+        }
+
         if (cfg.subtitle_size) {
           currentSubtitleSize = parseInt(cfg.subtitle_size, 10);
         }
@@ -410,11 +426,14 @@
         fetch('/api/model_error?err=' + encodeURIComponent(err.toString())).catch(() => {});
       });
 
-    // Keyboard Shortcuts: Ctrl + 1~9, Ctrl +/-, Ctrl [/], Ctrl + P
+    // Keyboard Shortcuts (Audited & IME-safe)
     window.addEventListener('keydown', (e) => {
       if (e.ctrlKey) {
+        const key = (e.key || '').toLowerCase();
+        const code = e.code || '';
+
         // 1. Expressions: Ctrl + 1 ~ 9 and Ctrl + 0
-        const foundExpr = expressionsList.find(x => e.key === x.key || e.code === 'Digit' + x.key || e.code === 'Numpad' + x.key);
+        const foundExpr = expressionsList.find(x => key === x.key || code === 'Digit' + x.key || code === 'Numpad' + x.key);
         if (foundExpr) {
           e.preventDefault();
           if (foundExpr.key === '0') {
@@ -426,38 +445,75 @@
           return;
         }
 
-        // 2. Scale adjustment by 0.2
-        if (e.key === '+' || e.key === '=' || e.code === 'NumpadAdd' || e.code === 'Equal') {
+        // 2. Scale adjustment by 0.2 (Ctrl + +, Ctrl + -)
+        if (code === 'Equal' || code === 'NumpadAdd' || key === '+' || key === '=') {
           e.preventDefault();
           changeScale(0.2);
-        } else if (e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract' || e.code === 'Minus') {
+          return;
+        } else if (code === 'Minus' || code === 'NumpadSubtract' || key === '-' || key === '_') {
           e.preventDefault();
           changeScale(-0.2);
+          return;
         }
-        // 3. Canvas boundary adjustment by 50px
-        else if (e.key === ']' || e.code === 'BracketRight') {
+        // 3. Canvas boundary adjustment by 50px (Ctrl + [, Ctrl + ])
+        else if (code === 'BracketRight' || key === ']') {
           e.preventDefault();
           setCanvasDimensions(window.innerWidth + 50, window.innerHeight + 50);
-        } else if (e.key === '[' || e.code === 'BracketLeft') {
+          return;
+        } else if (code === 'BracketLeft' || key === '[') {
           e.preventDefault();
           setCanvasDimensions(window.innerWidth - 50, window.innerHeight - 50);
+          return;
         }
-        // 4. Open Settings Window
-        else if (e.key === ',' || e.key === 'p' || e.key === 'P') {
+        // 4. Toggle Settings Window (Ctrl + ,)
+        else if (code === 'Comma' || key === ',') {
           e.preventDefault();
-          openSettingsWindow();
+          toggleSettingsWindow();
+          return;
         }
-        // 5. Subtitle Toggle
-        else if (e.key === 'u' || e.key === 'U') {
+        // 5. Subtitle Toggle (Ctrl + U)
+        else if (code === 'KeyU' || key === 'u' || key === 'ㅕ') {
           e.preventDefault();
           isSubtitleEnabled = !isSubtitleEnabled;
+          subtitleMode = isSubtitleEnabled;
+          localStorage.setItem('zundamon_sub_mode', subtitleMode ? '1' : '0');
           applyDisplaySettings(true);
+          fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subtitle_enabled: isSubtitleEnabled, subtitle_mode: subtitleMode })
+          }).catch(() => {});
+          bc.postMessage({ type: 'subtitle_toggle', enabled: isSubtitleEnabled });
           if (isSubtitleEnabled) {
             showToast('💬 자막: ON');
             previewSubtitle();
           } else {
             showToast('💬 자막: OFF');
           }
+          return;
+        }
+        // 7. Subtitle Display Mode Toggle (Ctrl + J: 말풍선 -> 하단 자막 -> 자막 숨김)
+        else if (code === 'KeyJ' || key === 'j' || key === 'ㅓ') {
+          e.preventDefault();
+          if (displayMode === 'bubble') {
+            displayMode = 'bottom';
+          } else if (displayMode === 'bottom') {
+            displayMode = 'none';
+          } else {
+            displayMode = 'bubble';
+          }
+          applyDisplaySettings(true);
+          fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ display_mode: displayMode })
+          }).catch(() => {});
+          bc.postMessage({ type: 'display_mode', mode: displayMode });
+          showToast(displayMode === 'bubble' ? '💭 말풍선 모드' : (displayMode === 'bottom' ? '📝 하단 자막 모드' : '❌ 자막 숨김'));
+          if (displayMode !== 'none') {
+            previewSubtitle();
+          }
+          return;
         }
       }
     });
@@ -467,67 +523,6 @@
       e.preventDefault();
       e.stopPropagation();
     }, { passive: false });
-
-    // Click Voice Lines and Motions
-    const clickReactions = [
-      { text: "와앗! 간지러운 것이다!", expr: "exp_surprise", motion: "mtnFace_surprise" },
-      { text: "갑자기 찌르면 깜짝 놀라는 것이다!", expr: "exp_surprise", motion: "mtnFace_surprise" },
-      { text: "보쿠를 왜 찌르는 것인가?! 자꾸 그러면 풋콩 미사일을 날릴 것이다!", expr: "exp_angry", motion: "mtnBody_point" },
-      { text: "얍! 보쿠는 끄떡없는 것이다~", expr: "exp_01", motion: "mtnBody_yes" },
-      { text: "무슨 일인 것이다? 보쿠의 도움이 필요한 것인가?", expr: "exp_01", motion: "mtnBody_point2" },
-      { text: "에헤헤~ 보쿠에게 관심이 많은 모양인 것이다~", expr: "exp_laugh", motion: "mtnBody_wave" }
-    ];
-
-    let lastClickTime = 0;
-    function triggerClickReaction(e) {
-      const now = Date.now();
-      if (now - lastClickTime < 1200) return;
-      lastClickTime = now;
-
-      const reaction = clickReactions[Math.floor(Math.random() * clickReactions.length)];
-      const foundExpr = expressionsList.find(x => x.id === reaction.expr) || expressionsList[0];
-      applyExpression(foundExpr);
-
-      if (live2dModel && reaction.motion) {
-        try {
-          live2dModel.motion('', reaction.motion);
-        } catch(err) {}
-      }
-
-      fetch('/api/speak', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: reaction.text,
-          speaker: 3,
-          expression: reaction.expr,
-          motion: reaction.motion
-        })
-      }).catch(() => {});
-    }
-
-    function triggerDoubleClickReaction() {
-      const happyExpr = expressionsList[8] || expressionsList[1]; // laugh2
-      applyExpression(happyExpr);
-      showToast("⚡ 더블 클릭 파워업!");
-
-      if (live2dModel) {
-        try {
-          live2dModel.motion('', 'mtnBody_laugh3');
-        } catch(e) {}
-      }
-
-      fetch('/api/speak', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: "더블 클릭인 것이다! 에너지 100% 충전 완료인 것이다~!",
-          speaker: 3,
-          expression: happyExpr.id,
-          motion: "mtnBody_laugh3"
-        })
-      }).catch(() => {});
-    }
 
     // Left click & Drag-to-move handling
     let leftDownX = 0, leftDownY = 0;
@@ -606,19 +601,7 @@
         const totalDist = Math.hypot(e.screenX - leftDownX, e.screenY - leftDownY);
         const elapsed = Date.now() - leftDownTime;
         if (!isLeftDragging && totalDist <= 4 && elapsed < 350) {
-          const now = Date.now();
-          if (now - lastClickTimestamp < 320) {
-            // Double Click
-            triggerDoubleClickReaction();
-            lastClickTimestamp = 0;
-          } else {
-            lastClickTimestamp = now;
-            setTimeout(() => {
-              if (lastClickTimestamp === now) {
-                triggerClickReaction(e);
-              }
-            }, 320);
-          }
+          // Touch / click reaction disabled
         }
         isLeftDragging = false;
       }
@@ -664,7 +647,7 @@
     setTimeout(startGlobalMouseTracking, 600);
 
     // Live2D Real-time Lip-Sync & Eye/Head Gaze Updates in Ticker
-    app.ticker.add(() => {
+    app.ticker.add((delta) => {
       if (!live2dModel || !live2dModel.internalModel || !live2dModel.internalModel.coreModel) return;
       const core = live2dModel.internalModel.coreModel;
 
@@ -672,13 +655,18 @@
       currentFocusX += (targetFocusX - currentFocusX) * 0.14;
       currentFocusY += (targetFocusY - currentFocusY) * 0.14;
 
+      const finalAngleZ = currentFocusX * -5;
+      const finalAngleX = currentFocusX * 24;
+      const finalAngleY = currentFocusY * 18;
+      const finalBodyX = currentFocusX * 7;
+
       try {
         core.setParameterValueById('ParamEyeBallX', currentFocusX * 0.9);
         core.setParameterValueById('ParamEyeBallY', currentFocusY * 0.9);
-        core.setParameterValueById('ParamAngleX', currentFocusX * 24);
-        core.setParameterValueById('ParamAngleY', currentFocusY * 18);
-        core.setParameterValueById('ParamAngleZ', currentFocusX * -5);
-        core.setParameterValueById('ParamBodyAngleX', currentFocusX * 7);
+        core.setParameterValueById('ParamAngleX', Math.max(-30, Math.min(30, finalAngleX)));
+        core.setParameterValueById('ParamAngleY', Math.max(-30, Math.min(30, finalAngleY)));
+        core.setParameterValueById('ParamAngleZ', Math.max(-30, Math.min(30, finalAngleZ)));
+        core.setParameterValueById('ParamBodyAngleX', Math.max(-10, Math.min(10, finalBodyX)));
       } catch(e) {}
 
       // Lip-sync
@@ -733,7 +721,7 @@
       }
 
       // Display dialogue in Comic Speech Bubble or Bottom Subtitle
-      if (text && isSubtitleEnabled) {
+      if (text && isSubtitleEnabled && displayMode !== 'none') {
         if (displayMode === 'bubble' && speechBubbleEl && bubbleTextEl) {
           bubbleTextEl.textContent = text;
           speechBubbleEl.classList.add('show');

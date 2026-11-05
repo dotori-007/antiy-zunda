@@ -41,6 +41,18 @@ def speak(text, speaker=3):
         with urllib.request.urlopen(urllib.request.Request(q_url, method="POST"), timeout=4) as resp:
             q_data = resp.read()
 
+        # Reduce pause duration at spaces
+        try:
+            q_json = json.loads(q_data.decode("utf-8"))
+            q_json["pauseLengthScale"] = 0.35
+            for ap in q_json.get("accent_phrases", []):
+                pm = ap.get("pause_mora")
+                if pm and "vowel_length" in pm and pm["vowel_length"] is not None:
+                    pm["vowel_length"] = min(pm["vowel_length"] * 0.35, 0.13)
+            q_data = json.dumps(q_json).encode("utf-8")
+        except Exception:
+            pass
+
         s_url = f"{vv_url}/synthesis?speaker={speaker}"
         s_req = urllib.request.Request(s_url, data=q_data, headers={"Content-Type": "application/json"}, method="POST")
         with urllib.request.urlopen(s_req, timeout=6) as resp:

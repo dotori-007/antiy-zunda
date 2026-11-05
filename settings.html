@@ -395,6 +395,31 @@
 
   <div class="vv-container">
 
+    <!-- 0. Subtitle Mode Panel -->
+    <div class="vv-panel" style="border-color: rgba(132, 204, 22, 0.45); box-shadow: 0 0 12px rgba(132, 204, 22, 0.1);">
+      <div class="vv-panel-header" style="background: rgba(132, 204, 22, 0.12); color: #84CC16;">
+        <span>💬 컴패니언 자막 모드 설정</span>
+        <span style="font-size:10px; color:var(--vv-text-sub);">대화 및 알림 표시</span>
+      </div>
+      <div class="vv-panel-body" style="display:flex; flex-direction:column; gap:10px;">
+        
+        <!-- Subtitle Mode Switch -->
+        <div class="vv-switch-container" style="background:rgba(0,0,0,0.25);">
+          <div>
+            <div style="font-weight:700; color:#FFFFFF; font-size:12px;">💬 자막 모드 (컴패니언 대화)</div>
+            <div style="font-size:10px; color:var(--vv-text-dim); margin-top:2px;">
+              대화 및 발화 시 말풍선 및 하단 자막 표시 (단축키: Ctrl + J)
+            </div>
+          </div>
+          <label class="vv-switch">
+            <input type="checkbox" id="chk-sub-mode" checked>
+            <span class="vv-switch-slider"></span>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
     <!-- 1. Styles / Expressions (Pill Chips) -->
     <div class="vv-panel">
       <div class="vv-panel-header">
@@ -535,6 +560,107 @@
             <input type="checkbox" id="chk-resource" checked>
             <span class="vv-switch-slider"></span>
           </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.8 VOICEVOX Voice Parameter Control -->
+    <div class="vv-panel">
+      <div class="vv-panel-header">
+        <span>🎙️ VOICEVOX 음성 파라미터 제어</span>
+        <span style="font-size:10px; color:var(--vv-text-dim);">속도 / 억양 / 음높이 / 볼륨 / 쉼표</span>
+      </div>
+      <div class="vv-panel-body">
+        <div class="vv-param-list">
+
+          <!-- 1. Voice Speed -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">말하기 속도</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-voice-speed" class="vv-slider" min="0.5" max="2.0" step="0.05" value="1.0">
+              </div>
+              <div class="vv-param-val" id="val-voice-speed">1.00x</div>
+              <button class="vv-btn-reset" id="btn-reset-voice-speed" title="1.00x 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip chip-voice-speed" data-val="0.8">0.8x</button>
+              <button class="vv-mini-chip chip-voice-speed" data-val="1.0">1.0x (기본)</button>
+              <button class="vv-mini-chip chip-voice-speed" data-val="1.2">1.2x</button>
+              <button class="vv-mini-chip chip-voice-speed" data-val="1.4">1.4x</button>
+            </div>
+          </div>
+
+          <!-- 2. Voice Intonation -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">억양 (Intonation)</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-voice-intonation" class="vv-slider" min="0.0" max="2.0" step="0.05" value="1.0">
+              </div>
+              <div class="vv-param-val" id="val-voice-intonation">1.00x</div>
+              <button class="vv-btn-reset" id="btn-reset-voice-intonation" title="1.00x 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip chip-voice-intonation" data-val="0.5">0.5x</button>
+              <button class="vv-mini-chip chip-voice-intonation" data-val="1.0">1.0x (기본)</button>
+              <button class="vv-mini-chip chip-voice-intonation" data-val="1.3">1.3x</button>
+              <button class="vv-mini-chip chip-voice-intonation" data-val="1.6">1.6x</button>
+            </div>
+          </div>
+
+          <!-- 3. Voice Pitch -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">음높이 (Pitch)</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-voice-pitch" class="vv-slider" min="-0.15" max="0.15" step="0.01" value="0.00">
+              </div>
+              <div class="vv-param-val" id="val-voice-pitch">+0.00</div>
+              <button class="vv-btn-reset" id="btn-reset-voice-pitch" title="0.00 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip chip-voice-pitch" data-val="-0.05">-0.05</button>
+              <button class="vv-mini-chip chip-voice-pitch" data-val="0.0">0.00 (기본)</button>
+              <button class="vv-mini-chip chip-voice-pitch" data-val="0.05">+0.05</button>
+            </div>
+          </div>
+
+          <!-- 4. Voice Volume -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">음량 (Volume)</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-voice-volume" class="vv-slider" min="0.2" max="2.0" step="0.05" value="1.0">
+              </div>
+              <div class="vv-param-val" id="val-voice-volume">1.00x</div>
+              <button class="vv-btn-reset" id="btn-reset-voice-volume" title="1.00x 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip chip-voice-volume" data-val="0.6">0.6x</button>
+              <button class="vv-mini-chip chip-voice-volume" data-val="1.0">1.0x (기본)</button>
+              <button class="vv-mini-chip chip-voice-volume" data-val="1.4">1.4x</button>
+            </div>
+          </div>
+
+          <!-- 5. Voice Pause Duration -->
+          <div>
+            <div class="vv-param-row">
+              <span class="vv-param-label">쉼표 간격 (Pause)</span>
+              <div class="vv-slider-container">
+                <input type="range" id="slider-voice-pause" class="vv-slider" min="0.10" max="1.50" step="0.05" value="0.35">
+              </div>
+              <div class="vv-param-val" id="val-voice-pause">0.35x</div>
+              <button class="vv-btn-reset" id="btn-reset-voice-pause" title="0.35x 초기화">↺</button>
+            </div>
+            <div class="vv-preset-row">
+              <button class="vv-mini-chip chip-voice-pause" data-val="0.20">0.20x (빠름)</button>
+              <button class="vv-mini-chip chip-voice-pause" data-val="0.35">0.35x (기본)</button>
+              <button class="vv-mini-chip chip-voice-pause" data-val="0.60">0.60x</button>
+              <button class="vv-mini-chip chip-voice-pause" data-val="1.00">1.00x (원음)</button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -680,7 +806,7 @@
     const btnResetSub = document.getElementById('btn-reset-sub');
     const chipsSub = document.querySelectorAll('.chip-sub');
 
-    function updateSubtitle(enabled, size) {
+    function updateSubtitle(enabled, size, sync = true) {
       chkSubtitle.checked = enabled;
       sliderSub.value = size;
       valSub.textContent = size + 'px';
@@ -689,13 +815,15 @@
 
       chipsSub.forEach(c => c.classList.toggle('active', parseInt(c.dataset.size) === size));
 
-      fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subtitle_enabled: enabled, subtitle_size: size })
-      });
-      bc.postMessage({ type: 'subtitle_toggle', enabled: enabled });
-      bc.postMessage({ type: 'subtitle_size', size: size });
+      if (sync) {
+        fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subtitle_enabled: enabled, subtitle_size: size })
+        });
+        bc.postMessage({ type: 'subtitle_toggle', enabled: enabled });
+        bc.postMessage({ type: 'subtitle_size', size: size });
+      }
     }
 
     chkSubtitle.addEventListener('change', () => {
@@ -720,10 +848,12 @@
     const chipsMode = document.querySelectorAll('.chip-mode');
     let currentDisplayMode = 'bubble';
 
-    function setDisplayMode(mode, saveServer = true) {
+    function setDisplayMode(mode, saveServer = true, broadcast = true) {
       currentDisplayMode = mode;
       chipsMode.forEach(c => c.classList.toggle('active', c.dataset.mode === mode));
-      bc.postMessage({ type: 'display_mode', mode: mode });
+      if (broadcast) {
+        bc.postMessage({ type: 'display_mode', mode: mode });
+      }
       if (saveServer) {
         fetch('/api/config', {
           method: 'POST',
@@ -773,12 +903,74 @@
       });
     });
 
+    // VOICEVOX Voice Parameters Control
+    function setupVoiceParam(sliderId, valId, resetId, configKey, defaultValue, formatFn) {
+      const slider = document.getElementById(sliderId);
+      const val = document.getElementById(valId);
+      const btnReset = document.getElementById(resetId);
+      if (!slider || !val) return () => {};
+
+      function update(v, save = true) {
+        const num = parseFloat(v);
+        slider.value = num;
+        val.textContent = formatFn(num);
+        if (save) {
+          fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ [configKey]: num })
+          }).catch(() => {});
+        }
+      }
+
+      slider.addEventListener('input', () => update(slider.value, true));
+      if (btnReset) {
+        btnReset.addEventListener('click', () => update(defaultValue, true));
+      }
+
+      return update;
+    }
+
+    const updateVoiceSpeed = setupVoiceParam('slider-voice-speed', 'val-voice-speed', 'btn-reset-voice-speed', 'voice_speed', 1.0, v => v.toFixed(2) + 'x');
+    const updateVoiceIntonation = setupVoiceParam('slider-voice-intonation', 'val-voice-intonation', 'btn-reset-voice-intonation', 'voice_intonation', 1.0, v => v.toFixed(2) + 'x');
+    const updateVoicePitch = setupVoiceParam('slider-voice-pitch', 'val-voice-pitch', 'btn-reset-voice-pitch', 'voice_pitch', 0.0, v => (v >= 0 ? '+' : '') + v.toFixed(2));
+    const updateVoiceVolume = setupVoiceParam('slider-voice-volume', 'val-voice-volume', 'btn-reset-voice-volume', 'voice_volume', 1.0, v => v.toFixed(2) + 'x');
+    const updateVoicePause = setupVoiceParam('slider-voice-pause', 'val-voice-pause', 'btn-reset-voice-pause', 'voice_pause', 0.35, v => v.toFixed(2) + 'x');
+
+    document.querySelectorAll('.chip-voice-speed').forEach(c => c.addEventListener('click', () => updateVoiceSpeed(parseFloat(c.dataset.val), true)));
+    document.querySelectorAll('.chip-voice-intonation').forEach(c => c.addEventListener('click', () => updateVoiceIntonation(parseFloat(c.dataset.val), true)));
+    document.querySelectorAll('.chip-voice-pitch').forEach(c => c.addEventListener('click', () => updateVoicePitch(parseFloat(c.dataset.val), true)));
+    document.querySelectorAll('.chip-voice-volume').forEach(c => c.addEventListener('click', () => updateVoiceVolume(parseFloat(c.dataset.val), true)));
+    document.querySelectorAll('.chip-voice-pause').forEach(c => c.addEventListener('click', () => updateVoicePause(parseFloat(c.dataset.val), true)));
+
+    // 0. Subtitle Mode Control
+    const chkSubMode = document.getElementById('chk-sub-mode');
+
+    function updateSubMode(enabled, sync = true) {
+      chkSubMode.checked = enabled;
+      if (sync) {
+        fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subtitle_mode: enabled })
+        });
+        bc.postMessage({ type: 'subtitle_mode_toggle', enabled: enabled });
+      }
+    }
+
+    chkSubMode.addEventListener('change', () => {
+      updateSubMode(chkSubMode.checked);
+    });
+
     // Listen for companion broadcast messages
     bc.onmessage = (e) => {
       const data = e.data;
       if (!data) return;
       if (data.type === 'scale_updated' && typeof data.scale === 'number') {
         applyScale(data.scale, true);
+
+      } else if (data.type === 'subtitle_mode_toggle') {
+        chkSubMode.checked = !!data.enabled;
       }
     };
     bc.postMessage({ type: 'get_scale' });
@@ -787,6 +979,10 @@
     fetch('/api/config')
       .then(r => r.json())
       .then(cfg => {
+        if (typeof cfg.subtitle_mode === 'boolean') {
+          updateSubMode(cfg.subtitle_mode, false);
+        }
+
         const w = cfg.win_w || 560;
         const h = cfg.win_h || 750;
         sliderW.value = w;
@@ -798,18 +994,57 @@
 
         const subEnabled = cfg.subtitle_enabled !== false;
         const subSize = cfg.subtitle_size || 14;
-        updateSubtitle(subEnabled, subSize);
+        updateSubtitle(subEnabled, subSize, false);
 
         if (cfg.display_mode) {
-          setDisplayMode(cfg.display_mode, false);
+          setDisplayMode(cfg.display_mode, false, false);
         }
 
         if (typeof cfg.resource_alert === 'boolean' && chkResource) chkResource.checked = cfg.resource_alert;
+
+                
+        if (typeof cfg.voice_speed === 'number') updateVoiceSpeed(cfg.voice_speed, false);
+        if (typeof cfg.voice_intonation === 'number') updateVoiceIntonation(cfg.voice_intonation, false);
+        if (typeof cfg.voice_pitch === 'number') updateVoicePitch(cfg.voice_pitch, false);
+        if (typeof cfg.voice_volume === 'number') updateVoiceVolume(cfg.voice_volume, false);
+        if (typeof cfg.voice_pause === 'number') updateVoicePause(cfg.voice_pause, false);
 
         const initScale = parseFloat(localStorage.getItem('zundamon_zoom') || '1.0');
         applyScale(initScale, true);
       })
       .catch(() => {});
+
+    // Close settings window handler via API & Server
+    function closeSettingsWindow() {
+      if (window.pywebview && window.pywebview.api && (window.pywebview.api.close_settings || window.pywebview.api.toggle_settings)) {
+        try {
+          const fn = window.pywebview.api.close_settings || window.pywebview.api.toggle_settings;
+          fn();
+        } catch(e) {}
+      }
+      fetch('/api/close_settings', { method: 'POST' }).catch(() => {
+        fetch('/api/close_settings').catch(() => {});
+      });
+    }
+
+    // Keyboard shortcuts inside Settings window (ESC or Ctrl + , to close)
+    function onSettingsKeyDown(e) {
+      const code = e.code || '';
+      const key = (e.key || '').toLowerCase();
+      if (key === 'escape' || code === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeSettingsWindow();
+      } else if (e.ctrlKey && (code === 'Comma' || key === ',')) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeSettingsWindow();
+      }
+    }
+
+    window.addEventListener('keydown', onSettingsKeyDown, true);
+    document.addEventListener('keydown', onSettingsKeyDown, true);
+    window.focus();
   </script>
 </body>
 </html>
