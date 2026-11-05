@@ -15,15 +15,13 @@ except Exception:
     def to_katakana(t): return t
 
 def speak(text, speaker=3):
-    # Convert any Korean Hangul text to natural Katakana pronunciation for VOICEVOX
-    tts_text = to_katakana(text)
-
     # Try sending to running Live2D companion first (fast timeout)
+    # Keep original Korean text so subtitles and speech bubbles display natural Korean
     try:
         host = os.environ.get("ZUNDAMON_HOST", "127.0.0.1:8989")
         req = urllib.request.Request(
             f"http://{host}/api/speak",
-            data=json.dumps({"text": tts_text, "raw_text": text, "speaker": speaker}).encode("utf-8"),
+            data=json.dumps({"text": text, "display_text": text, "raw_text": text, "speaker": speaker}).encode("utf-8"),
             headers={"Content-Type": "application/json"}
         )
         with urllib.request.urlopen(req, timeout=20) as resp:
@@ -35,6 +33,8 @@ def speak(text, speaker=3):
         pass
 
     # Direct fallback to VOICEVOX if companion window is not active
+    # Convert any Korean Hangul text to natural Katakana pronunciation for VOICEVOX
+    tts_text = to_katakana(text)
     try:
         vv_url = "http://127.0.0.1:50021"
         q_url = f"{vv_url}/audio_query?text={urllib.parse.quote(tts_text)}&speaker={speaker}"
@@ -76,5 +76,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         text = " ".join(sys.argv[1:])
     else:
-        text = "ずんだもん登場なのだ！"
+        text = "보쿠는 즌다몬인 것이다!"
     speak(text)

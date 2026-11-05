@@ -589,30 +589,50 @@ def api_speak():
     if request.method == "POST":
         data = request.json or {}
         text = data.get("text", "")
+        raw_text = data.get("raw_text") or data.get("display_text") or ""
         speaker = data.get("speaker", 3)
         expression = data.get("expression")
         motion = data.get("motion")
+        speed = data.get("voice_speed")
+        pitch = data.get("voice_pitch")
+        intonation = data.get("voice_intonation")
+        volume = data.get("voice_volume")
+        pause = data.get("voice_pause")
     else:
+        data = {}
         text = request.query.get("text", "")
+        raw_text = request.query.get("raw_text") or request.query.get("display_text") or ""
         speaker = int(request.query.get("speaker", 3))
         expression = request.query.get("expression")
         motion = request.query.get("motion")
+        speed = request.query.get("voice_speed")
+        pitch = request.query.get("voice_pitch")
+        intonation = request.query.get("voice_intonation")
+        volume = request.query.get("voice_volume")
+        pause = request.query.get("voice_pause")
 
-    if not text:
+    if not text and not raw_text:
         return json.dumps({"error": "Empty text"})
 
-    display_text = text
-    # Automatically transform Korean to Katakana via G2P for speech engine
+    # Ensure subtitle / bubble text is strictly in Korean if raw_text or Korean text exists
+    if raw_text:
+        display_text = raw_text
+    else:
+        display_text = text
+
+    # Determine speech synthesis text (convert Korean to Katakana for VOICEVOX)
     if any(0xAC00 <= ord(c) <= 0xD7A3 for c in text):
         synth_text = to_katakana(text)
+    elif raw_text and any(0xAC00 <= ord(c) <= 0xD7A3 for c in raw_text):
+        synth_text = to_katakana(raw_text)
     else:
         synth_text = text
 
     try:
         info = synthesize_voicevox(synth_text, speaker, display_text=display_text, expression=expression, motion=motion,
-                                   speed=data.get("voice_speed"), pitch=data.get("voice_pitch"),
-                                   intonation=data.get("voice_intonation"), volume=data.get("voice_volume"),
-                                   pause=data.get("voice_pause"))
+                                   speed=speed, pitch=pitch,
+                                   intonation=intonation, volume=volume,
+                                   pause=pause)
         return json.dumps({"success": True, "info": info})
     except Exception as e:
         return json.dumps({"error": str(e)})
