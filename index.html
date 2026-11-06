@@ -689,6 +689,7 @@
     });
 
     let bubbleHideTimeout = null;
+    let emotionResetTimeout = null;
 
     // Speak Function: Plays audio buffer with lipsync, comic bubble & subtitle
     function speakAudio(audioUrl, text, expression, motion) {
@@ -735,12 +736,17 @@
 
       isSpeaking = true;
 
+      if (emotionResetTimeout) {
+        clearTimeout(emotionResetTimeout);
+        emotionResetTimeout = null;
+      }
+
       // Apply dynamic expression if provided
-      if (expression) {
+      if (expression && live2dModel) {
         const found = expressionsList.find(x => x.id === expression || x.key === expression);
         if (found) {
           applyExpression(found);
-        } else if (live2dModel) {
+        } else {
           try { live2dModel.expression(expression); } catch(e) {}
         }
       }
@@ -773,6 +779,15 @@
             live2dModel.internalModel.coreModel.setParameterValueById('ParamMouthOpenY', 0);
           } catch(e) {}
         }
+
+        // Return to default resting smile expression after speech finishes
+        emotionResetTimeout = setTimeout(() => {
+          if (!isSpeaking && live2dModel) {
+            try {
+              live2dModel.expression('exp_smile');
+            } catch(e) {}
+          }
+        }, 2200);
       };
 
       audio.play().catch(e => console.error('Audio play error:', e));
@@ -787,7 +802,7 @@
           const data = await res.json();
           if (data && data.audioId && data.audioId > lastAudioId) {
             lastAudioId = data.audioId;
-            speakAudio(data.audioUrl, data.text, data.expression, data.motion);
+            speakAudio(data.audioUrl, data.text, data.expression, data.motion, data.params, data.emotion);
           }
         }
       } catch(e) {}

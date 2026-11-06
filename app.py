@@ -12,7 +12,7 @@ import subprocess
 import ctypes
 import traceback
 from ctypes import wintypes
-from bottle import Bottle, request, response, static_file
+from bottle import Bottle, request, response, static_file, HTTPResponse
 import webview
 
 
@@ -41,6 +41,13 @@ try:
     from hangul_to_kana import to_katakana
 except Exception:
     def to_katakana(t): return t
+
+try:
+    from emotion_engine import analyze_emotion
+except Exception as ee:
+    log_msg(f"Failed to import emotion_engine: {ee}")
+    def analyze_emotion(t, default_speaker=3):
+        return {"key": "normal", "expression": "exp_smile", "motion": "mtnBody_yes", "params": {}, "speaker": default_speaker, "clean_text": t}
 # Dynamic Model Directory Resolution
 MODEL_DIR = os.path.join(APP_DIR, "model")
 if not os.path.exists(MODEL_DIR):
@@ -208,11 +215,12 @@ class TrackerApi:
 
         log_msg("settings_window is not open -> creating")
         try:
+            settings_url = f"http://127.0.0.1:8989/settings?_v={int(time.time() * 1000)}"
             settings_window = webview.create_window(
                 "🌱 즌다몬 컴패니언 설정",
-                url="http://127.0.0.1:8989/settings",
-                width=470,
-                height=580,
+                url=settings_url,
+                width=540,
+                height=650,
                 resizable=True,
                 on_top=True,
                 js_api=self
@@ -235,6 +243,10 @@ class TrackerApi:
                 return False
 
     def open_settings(self):
+        global settings_window
+        if settings_window is not None:
+            self.close_settings()
+            time.sleep(0.15)
         return self.toggle_settings()
 
     def start_drag(self):
@@ -391,7 +403,8 @@ def save_config(cfg):
 
 # Fast synthesis with MD5 hash caching and configurable voice parameters
 def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=None, motion=None,
-                        speed=None, pitch=None, intonation=None, volume=None, pause=None):
+                        speed=None, pitch=None, intonation=None, volume=None, pause=None,
+                        params=None, emotion=None):
     global current_audio_id, latest_audio_info
 
     if display_text is None:
@@ -405,7 +418,7 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=Non
     v_pause = float(pause if pause is not None else cfg.get("voice_pause", 0.35))
 
     # 1. Fast Cache Check with voice parameter hash
-    cache_key = hashlib.md5(f"v4:{speaker}:{synth_text}:{v_speed:.2f}:{v_pitch:.2f}:{v_intonation:.2f}:{v_volume:.2f}:{v_pause:.2f}".encode("utf-8")).hexdigest()
+    cache_key = hashlib.md5(f"v5:{speaker}:{synth_text}:{v_speed:.2f}:{v_pitch:.2f}:{v_intonation:.2f}:{v_volume:.2f}:{v_pause:.2f}".encode("utf-8")).hexdigest()
     cached_name = f"cached_{cache_key}.wav"
     cached_path = os.path.join(AUDIO_DIR, cached_name)
 
@@ -416,7 +429,9 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=Non
             "audioUrl": f"/audio/{cached_name}",
             "text": display_text,
             "expression": expression,
-            "motion": motion
+            "motion": motion,
+            "params": params or {},
+            "emotion": emotion
         }
         return latest_audio_info
 
@@ -461,7 +476,9 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=Non
         "audioUrl": f"/audio/{cached_name}",
         "text": display_text,
         "expression": expression,
-        "motion": motion
+        "motion": motion,
+        "params": params or {},
+        "emotion": emotion
     }
     return latest_audio_info
 
@@ -469,13 +486,35 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=Non
 # HTTP Routes
 @app.route("/")
 def index():
-    response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
-    return static_file("index.html", root=APP_DIR)
+    p = os.path.join(APP_DIR, "index.html")
+    with open(p, "r", encoding="utf-8") as f:
+        html = f.read()
+    return HTTPResponse(
+        body=html,
+        status=200,
+        headers={
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
 
 @app.route("/settings")
 def serve_settings():
-    response.set_header("Cache-Control", "no-cache, no-store, must-revalidate")
-    return static_file("settings.html", root=APP_DIR)
+    p = os.path.join(APP_DIR, "settings.html")
+    with open(p, "r", encoding="utf-8") as f:
+        html = f.read()
+    return HTTPResponse(
+        body=html,
+        status=200,
+        headers={
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
 
 @app.route("/api/open_settings", method=["GET", "POST"])
 @app.route("/api/toggle_settings", method=["GET", "POST"])
@@ -591,8 +630,11 @@ def api_speak():
         text = data.get("text", "")
         raw_text = data.get("raw_text") or data.get("display_text") or ""
         speaker = data.get("speaker", 3)
+        speaker_explicit = bool(data.get("speaker_explicit"))
         expression = data.get("expression")
         motion = data.get("motion")
+        emotion = data.get("emotion")
+        params = data.get("params")
         speed = data.get("voice_speed")
         pitch = data.get("voice_pitch")
         intonation = data.get("voice_intonation")
@@ -603,8 +645,11 @@ def api_speak():
         text = request.query.get("text", "")
         raw_text = request.query.get("raw_text") or request.query.get("display_text") or ""
         speaker = int(request.query.get("speaker", 3))
+        speaker_explicit = "speaker" in request.query
         expression = request.query.get("expression")
         motion = request.query.get("motion")
+        emotion = request.query.get("emotion")
+        params = None
         speed = request.query.get("voice_speed")
         pitch = request.query.get("voice_pitch")
         intonation = request.query.get("voice_intonation")
@@ -614,26 +659,47 @@ def api_speak():
     if not text and not raw_text:
         return json.dumps({"error": "Empty text"})
 
-    # Ensure subtitle / bubble text is strictly in Korean if raw_text or Korean text exists
-    if raw_text:
-        display_text = raw_text
-    else:
-        display_text = text
+    target_text = raw_text if raw_text else text
+
+    # Analyze emotion from text
+    emo_profile = analyze_emotion(target_text, default_speaker=speaker)
+    clean_text = emo_profile.get("clean_text", target_text)
+
+    display_text = clean_text
+
+    if emotion is None:
+        emotion = emo_profile.get("key")
+    if expression is None:
+        expression = emo_profile.get("expression")
+    if motion is None:
+        motion = emo_profile.get("motion")
+    if params is None:
+        params = emo_profile.get("params", {})
+    if not speaker_explicit and emo_profile.get("speaker"):
+        speaker = emo_profile.get("speaker")
+
+    # Apply emotion voice fine-tuning if not manually overridden
+    cfg = load_config()
+    if speed is None and "voice_speed_delta" in emo_profile:
+        speed = max(0.5, min(2.0, float(cfg.get("voice_speed", 1.0)) + emo_profile["voice_speed_delta"]))
+    if pitch is None and "voice_pitch_delta" in emo_profile:
+        pitch = max(-0.15, min(0.15, float(cfg.get("voice_pitch", 0.0)) + emo_profile["voice_pitch_delta"]))
+    if intonation is None and "voice_intonation_delta" in emo_profile:
+        intonation = max(0.0, min(2.0, float(cfg.get("voice_intonation", 1.0)) + emo_profile["voice_intonation_delta"]))
 
     # Determine speech synthesis text (convert Korean to Katakana for VOICEVOX)
-    if any(0xAC00 <= ord(c) <= 0xD7A3 for c in text):
-        synth_text = to_katakana(text)
-    elif raw_text and any(0xAC00 <= ord(c) <= 0xD7A3 for c in raw_text):
-        synth_text = to_katakana(raw_text)
+    if any(0xAC00 <= ord(c) <= 0xD7A3 for c in clean_text):
+        synth_text = to_katakana(clean_text)
     else:
-        synth_text = text
+        synth_text = clean_text
 
     try:
-        info = synthesize_voicevox(synth_text, speaker, display_text=display_text, expression=expression, motion=motion,
+        info = synthesize_voicevox(synth_text, speaker, display_text=display_text,
+                                   expression=expression, motion=motion,
                                    speed=speed, pitch=pitch,
                                    intonation=intonation, volume=volume,
-                                   pause=pause)
-        return json.dumps({"success": True, "info": info})
+                                   pause=pause, params=params, emotion=emotion)
+        return json.dumps({"success": True, "info": info, "emotion": emotion})
     except Exception as e:
         return json.dumps({"error": str(e)})
 

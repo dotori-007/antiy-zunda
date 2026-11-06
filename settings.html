@@ -56,15 +56,74 @@
       background: rgba(255, 255, 255, 0.35);
     }
 
-    /* Container */
+    /* Top Sticky Tab Navigation Bar */
+    .vv-tabs-container {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--vv-bg);
+      padding: 12px 14px 8px 14px;
+      border-bottom: 1px solid var(--vv-border-subtle);
+    }
+
+    .vv-tabs-bar {
+      display: flex;
+      background: var(--vv-surface);
+      border: 1px solid var(--vv-border);
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .vv-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--vv-text-sub);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 8px 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .vv-tab-btn:hover {
+      background: var(--vv-control);
+      color: #FFFFFF;
+    }
+
+    .vv-tab-btn.active {
+      background: var(--vv-primary-dark);
+      color: #FFFFFF;
+      border-color: var(--vv-primary);
+      box-shadow: 0 2px 8px rgba(132, 204, 22, 0.2);
+    }
+
+    /* Container & Tab Content */
     .vv-container {
-      padding: 16px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
 
-    /* Style / Expression Pill Chips */
+    .vv-tab-content {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .vv-tab-content.active {
+      display: flex;
+    }
+
+    /* Panels */
     .vv-panel {
       background: var(--vv-surface);
       border: 1px solid var(--vv-border);
@@ -88,6 +147,7 @@
       padding: 12px 14px;
     }
 
+    /* Style / Expression Pill Chips */
     .vv-style-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -144,7 +204,7 @@
       border-color: var(--vv-primary);
     }
 
-    /* Signature Parameter Inspector Rows */
+    /* Parameter Inspector Rows */
     .vv-param-list {
       display: flex;
       flex-direction: column;
@@ -248,33 +308,39 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
-      background: var(--vv-bg-alt);
+      padding: 10px 12px;
+      background: var(--vv-surface-high);
+      border-radius: 6px;
       border: 1px solid var(--vv-border-subtle);
-      border-radius: 4px;
-      margin-top: 4px;
     }
 
     .vv-switch {
       position: relative;
       display: inline-block;
-      width: 38px;
+      width: 36px;
       height: 20px;
+      flex-shrink: 0;
     }
+
     .vv-switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
+
     .vv-switch-slider {
       position: absolute;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background-color: var(--vv-control);
-      transition: 0.2s;
       border-radius: 20px;
+      transition: 0.18s ease;
       border: 1px solid var(--vv-border);
     }
+
     .vv-switch-slider:before {
       position: absolute;
       content: "";
@@ -282,20 +348,22 @@
       width: 14px;
       left: 2px;
       bottom: 2px;
-      background-color: white;
-      transition: 0.2s;
+      background-color: #FFFFFF;
       border-radius: 50%;
+      transition: 0.18s ease;
     }
-    input:checked + .vv-switch-slider {
+
+    .vv-switch input:checked + .vv-switch-slider {
       background-color: var(--vv-primary-bright);
       border-color: var(--vv-primary-bright);
     }
-    input:checked + .vv-switch-slider:before {
-      transform: translateX(18px);
+
+    .vv-switch input:checked + .vv-switch-slider:before {
+      transform: translateX(16px);
       background-color: #1A2E05;
     }
 
-    /* Subtitle Live Preview */
+    /* Subtitle Live Preview Box */
     .vv-subtitle-preview {
       background: #0D1111;
       border: 1px dashed var(--vv-border);
@@ -389,292 +457,627 @@
     .vv-input-script::placeholder {
       color: var(--vv-text-dim);
     }
+
+    /* Emotion Lab Cards Grid */
+    .vv-emotion-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .vv-emotion-card {
+      background: var(--vv-surface-high);
+      border: 1px solid var(--vv-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .vv-emotion-card:hover {
+      border-color: var(--vv-primary);
+      background: #393E3E;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .vv-emotion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .vv-emotion-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .vv-emotion-badge {
+      font-size: 9px;
+      background: rgba(132, 204, 22, 0.18);
+      color: var(--vv-primary-bright);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(132, 204, 22, 0.3);
+      font-family: monospace;
+    }
+
+    .vv-emotion-desc {
+      font-size: 10px;
+      color: var(--vv-text-sub);
+      line-height: 1.35;
+    }
+
+    .vv-emotion-quote {
+      font-size: 11px;
+      color: #E2E8F0;
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 2px solid var(--vv-primary);
+      padding: 5px 8px;
+      border-radius: 0 4px 4px 0;
+      word-break: keep-all;
+      line-height: 1.35;
+    }
+
+    .vv-btn-emo-play {
+      margin-top: 4px;
+      background: var(--vv-control);
+      border: 1px solid var(--vv-border);
+      color: var(--vv-primary);
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .vv-btn-emo-play:hover {
+      background: var(--vv-primary-bright);
+      color: #1A2E05;
+      border-color: var(--vv-primary-bright);
+      box-shadow: 0 2px 8px rgba(132, 204, 22, 0.3);
+    }
+
+    .vv-btn-emo-play:disabled {
+      background: var(--vv-surface);
+      color: var(--vv-text-dim);
+      border-color: var(--vv-border-subtle);
+      cursor: not-allowed;
+    }
+
+    .vv-emo-feedback {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      margin-top: 8px;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 6px;
+      color: var(--vv-text-sub);
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
 
+  <!-- Sticky Top Tab Navigation Bar (4대 탭) -->
+  <div class="vv-tabs-container">
+    <div class="vv-tabs-bar">
+      <button class="vv-tab-btn active" data-tab="tab-emotions">
+        <span>✨</span> <span>감정표현 테스트</span>
+      </button>
+      <button class="vv-tab-btn" data-tab="tab-model">
+        <span>🎭</span> <span>캐릭터 & 디스플레이</span>
+      </button>
+      <button class="vv-tab-btn" data-tab="tab-subtitles">
+        <span>💬</span> <span>자막 & 대사 설정</span>
+      </button>
+      <button class="vv-tab-btn" data-tab="tab-voice">
+        <span>🎙️</span> <span>음성 & 립싱크 테스트</span>
+      </button>
+    </div>
+  </div>
+
   <div class="vv-container">
 
-    <!-- 0. Subtitle Mode Panel -->
-    <div class="vv-panel" style="border-color: rgba(132, 204, 22, 0.45); box-shadow: 0 0 12px rgba(132, 204, 22, 0.1);">
-      <div class="vv-panel-header" style="background: rgba(132, 204, 22, 0.12); color: #84CC16;">
-        <span>💬 컴패니언 자막 모드 설정</span>
-        <span style="font-size:10px; color:var(--vv-text-sub);">대화 및 알림 표시</span>
-      </div>
-      <div class="vv-panel-body" style="display:flex; flex-direction:column; gap:10px;">
-        
-        <!-- Subtitle Mode Switch -->
-        <div class="vv-switch-container" style="background:rgba(0,0,0,0.25);">
-          <div>
-            <div style="font-weight:700; color:#FFFFFF; font-size:12px;">💬 자막 모드 (컴패니언 대화)</div>
-            <div style="font-size:10px; color:var(--vv-text-dim); margin-top:2px;">
-              대화 및 발화 시 말풍선 및 하단 자막 표시 (단축키: Ctrl + J)
-            </div>
-          </div>
-          <label class="vv-switch">
-            <input type="checkbox" id="chk-sub-mode" checked>
-            <span class="vv-switch-slider"></span>
-          </label>
+    <!-- ============================================================== -->
+    <!-- TAB 1: EMOTION TEST LAB (감정표현 테스트 탭)                     -->
+    <!-- ============================================================== -->
+    <div id="tab-emotions" class="vv-tab-content active">
+
+      <!-- Header Info Banner -->
+      <div class="vv-panel" style="border-color: rgba(132, 204, 22, 0.45); box-shadow: 0 0 14px rgba(132, 204, 22, 0.12);">
+        <div class="vv-panel-header" style="background: rgba(132, 204, 22, 0.12); color: #84CC16;">
+          <span>✨ 즌다몬 실시간 감정 대응 랩 (Emotion Lab)</span>
+          <span style="font-size:10px; color:var(--vv-text-sub);">8가지 감정 프리셋 & AI 자동 감지</span>
         </div>
-
+        <div class="vv-panel-body" style="font-size:11px; color:var(--vv-text-sub); line-height:1.45;">
+          대사의 의미와 감정에 따라 <strong style="color:#FFF;">Live2D 표정</strong>, <strong style="color:#FFF;">전신 모션</strong>, 그리고 <strong style="color:#FFF;">VOICEVOX 목소리 톤</strong>(스타일·억양·피치)이 실시간으로 연동되어 반응합니다. 아래 카드의 <strong style="color:#84CC16;">[▶ 재생]</strong> 버튼을 누르면 즉시 캐릭터가 동작합니다!
+        </div>
       </div>
+
+      <!-- Custom Emotion Speech Tester -->
+      <div class="vv-cell-container" style="border-color: rgba(165, 212, 173, 0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:12px; font-weight:700; color:var(--vv-primary);">💬 자유 대사 감정 테스트</span>
+          <span style="font-size:10px; color:var(--vv-text-dim);">입력 텍스트 실시간 분석</span>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <select id="sel-emo-mode" style="background:var(--vv-bg-alt); color:#FFFFFF; border:1px solid var(--vv-border); border-radius:6px; padding:6px 10px; font-size:11px; outline:none; cursor:pointer;">
+            <option value="auto">🤖 감정 자동 감지 (Auto AI)</option>
+            <option value="crying">💧 눈물/오류 (crying)</option>
+            <option value="panic">😱 충격/공포 (panic)</option>
+            <option value="angry_pout">😡 삐짐/볼빵빵 (angry_pout)</option>
+            <option value="joy_cheer">🙌 환호/만세 (joy_cheer)</option>
+            <option value="smug_pride">🦾 당당/허세 (smug_pride)</option>
+            <option value="thinking">🤔 생각/진단 (thinking)</option>
+            <option value="love_shy">😍 사랑/감동 (love_shy)</option>
+            <option value="chop_action">🥋 촙/손날 (chop_action)</option>
+          </select>
+          <div style="flex:1; display:flex;" class="vv-script-box">
+            <input type="text" id="inp-custom-emo" class="vv-input-script" value="타임아웃 오류가 발생해서 너무 슬픈 것이다 ㅠㅠ" placeholder="테스트할 대사를 입력하세요...">
+            <button class="vv-btn-play" id="btn-play-custom-emo" title="감정 발화하기">▶</button>
+          </div>
+        </div>
+        <div class="vv-emo-feedback" id="box-emo-feedback" style="display:none;">
+          <span>🎯 결과:</span>
+          <span id="txt-feedback-emo" style="color:var(--vv-primary-bright); font-weight:700;">crying</span>
+          <span style="opacity:0.4;">|</span>
+          <span id="txt-feedback-detail" style="color:#FFF;">표정: exp_sad, 모션: mtnBody_tremble</span>
+        </div>
+      </div>
+
+      <!-- 8 Emotion Preset Cards Grid -->
+      <div class="vv-panel">
+        <div class="vv-panel-header">
+          <span>🎭 8가지 대표 감정 즉시 테스트</span>
+          <span style="font-size:10px; color:var(--vv-text-dim);">원클릭 실시간 시연</span>
+        </div>
+        <div class="vv-panel-body">
+          <div class="vv-emotion-grid" id="emotion-cards-grid">
+
+            <!-- 1. Crying -->
+            <div class="vv-emotion-card">
+              <div class="vv-emotion-header">
+                <span class="vv-emotion-title">💧 오류 / 눈물</span>
+                <span class="vv-emotion-badge">crying</span>
+              </div>
+              <div class="vv-emotion-desc">exp_sad (눈물 + 시든 귀) & mtnBody_tremble (덜덜 떨기)</div>
+              <div class="vv-emotion-quote">"타임아웃 오류가 발생해서 너무 슬픈 것이다 ㅠㅠ"</div>
+              <button class="vv-btn-emo-play" data-emo="crying" data-text="타임아웃 오류가 발생해서 너무 슬픈 것이다 ㅠㅠ">
+                <span>▶</span> <span>눈물 흘리기 테스트</span>
+              </button>
+            </div>
+
+            <!-- 2. Panic -->
+            <div class="vv-emotion-card">
+              <div class="vv-emotion-header">
+                <span class="vv-emotion-title">😱 충격 / 새파람</span>
+                <span class="vv-emotion-badge">panic</span>
+              </div>
+              <div class="vv-emotion-desc">exp_01 (새파란 얼굴 + 식은땀) & mtnBody_tremble</div>
+              <div class="vv-emotion-quote">"클라우드플레어 403 차단으로 웹서버가 막혀서 큰일인 것이다!"</div>
+              <button class="vv-btn-emo-play" data-emo="panic" data-text="클라우드플레어 403 차단으로 웹서버가 막혀서 큰일인 것이다!">
+                <span>▶</span> <span>새파랗게 질리기 테스트</span>
+              </button>
+            </div>
+
+            <!-- 3. Angry Pout -->
+            <div class="vv-emotion-card">
+              <div class="vv-emotion-header">
+                <span class="vv-emotion-title">😡 삐짐 / 볼빵빵</span>
+                <span class="vv-emotion-badge">angry_pout</span>
+              </div>
+              <div class="vv-emotion-desc">exp_05 (볼 빵빵) & mtnBody_no (도리도리) & 츤츤 보이스</div>
+              <div class="vv-emotion-quote">"그런 말도 안 되는 소리는 절대 인정 못하는 것이다! 흥!"</div>
+              <button class="vv-btn-emo-play" data-emo="angry_pout" data-text="그런 말도 안 되는 소리는 절대 인정 못하는 것이다! 흥!">
+                <span>▶</span> <span>볼 빵빵 삐짐 테스트</span>
+              </button>
+            </div>
+
+            <!-- 4. Joy Cheer -->
+            <div class="vv-emotion-card">
+              <div class="vv-emotion-header">
+                <span class="vv-emotion-title">🙌 환호 / 성공</span>
+                <span class="vv-emotion-badge">joy_cheer</span>
+              </div>
+              <div class="vv-emotion-desc">exp_laugh2 (웃는 눈 + 쫑긋 귀) & mtnBody_wave & 아마아마</div>
+              <div class="vv-emotion-quote">"모든 문제가 완벽하게 해결되어 대성공인 것이다! 만세!"</div>
+              <button class="vv-btn-emo-play" data-emo="joy_cheer" data-text="모든 문제가 완벽하게 해결되어 대성공인 것이다! 만세!">
+                <span>▶</span> <span>만세 환호 테스트</span>
+              </button>
+            </div>
+
+            <!-- 5. Smug Pride -->
+            <div class="vv-emotion-card">
+              <div class="vv-emotion-header">
+                <span class="vv-emotion-title">🦾 당당 / 허세</span>
+                <span class="vv-emotion-badge">smug_pride</span>
+              </div>
+              <div class="vv-emotion-desc">exp_smile & mtnBody_point (당당하게 삿대질) & 츤츤</div>
+              <div class="vv-emotion-quote">"그 정도 문제는 보쿠한테 맡겨주면 당연히 완벽하게 해결하는 것이다!"</div>
+              <button class="vv-btn-emo-play" data-emo="smug_pride" data-text="그 정도 문제는 보쿠한테 맡겨주면 당연히 완벽하게 해결하는 것이다!">
+                <span>▶</span> <span>당당 허세 테스트</span>
+              </button>
+            </div>
+
+            <!-- 6. Thinking -->
+            <div class="vv-emotion-card">
+              <div class="vv-emotion-header">
+                <span class="vv-emotion-title">🤔 생각 / 진단</span>
+                <span class="vv-emotion-badge">thinking</span>
+              </div>
+              <div class="vv-emotion-desc">exp_04 (턱에 손대기 포즈) & mtnBody_think (생각 모션)</div>
+              <div class="vv-emotion-quote">"시스템 로그와 네트워크 패킷을 하나하나 분석하고 진단해 보는 것이다."</div>
+              <button class="vv-btn-emo-play" data-emo="thinking" data-text="시스템 로그와 네트워크 패킷을 하나하나 분석하고 진단해 보는 것이다.">
+                <span>▶</span> <span>턱괴기 생각 테스트</span>
+              </button>
+            </div>
+
+            <!-- 7. Love Shy -->
+            <div class="vv-emotion-card">
+              <div class="vv-emotion-header">
+                <span class="vv-emotion-title">😍 사랑 / 감동</span>
+                <span class="vv-emotion-badge">love_shy</span>
+              </div>
+              <div class="vv-emotion-desc">exp_shy (수줍은 미소 + 홍조) & mtnFace_shy & 아마아마</div>
+              <div class="vv-emotion-quote">"칭찬해줘서 너무 고맙고 부끄러운 것이다!"</div>
+              <button class="vv-btn-emo-play" data-emo="love_shy" data-text="칭찬해줘서 너무 고맙고 부끄러운 것이다!">
+                <span>▶</span> <span>부끄 감동 테스트</span>
+              </button>
+            </div>
+
+            <!-- 8. Chop Action -->
+            <div class="vv-emotion-card">
+              <div class="vv-emotion-header">
+                <span class="vv-emotion-title">🥋 촙 액션</span>
+                <span class="vv-emotion-badge">chop_action</span>
+              </div>
+              <div class="vv-emotion-desc">exp_angry3 (발끈) & mtnBody_point2 (손날 내지르기)</div>
+              <div class="vv-emotion-quote">"말을 안 듣는 버그에는 촙을 날려주는 것이다!"</div>
+              <button class="vv-btn-emo-play" data-emo="chop_action" data-text="말을 안 듣는 버그에는 촙을 날려주는 것이다!">
+                <span>▶</span> <span>촙 손날치기 테스트</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- 1. Styles / Expressions (Pill Chips) -->
-    <div class="vv-panel">
-      <div class="vv-panel-header">
-        <span>🎭 캐릭터 스타일 / 표정 제어</span>
-        <span style="font-size:10px; color:var(--vv-text-dim);">단축키 Ctrl + 1 ~ 9</span>
+    <!-- ============================================================== -->
+    <!-- TAB 2: MODEL & DISPLAY (배율, 너비, 높이만 깔끔하게 유지)         -->
+    <!-- ============================================================== -->
+    <div id="tab-model" class="vv-tab-content">
+
+      <!-- 1. Styles / Expressions (Pill Chips) -->
+      <div class="vv-panel">
+        <div class="vv-panel-header">
+          <span>🎭 캐릭터 스타일 / 표정 제어</span>
+          <span style="font-size:10px; color:var(--vv-text-dim);">단축키 Ctrl + 1 ~ 9</span>
+        </div>
+        <div class="vv-panel-body">
+          <div class="vv-style-grid" id="style-grid"></div>
+          <button class="vv-btn-subtle" id="btn-reset-expr">
+            <span>↺</span>
+            <span>기본 스타일로 초기화 (Ctrl + 0)</span>
+          </button>
+        </div>
       </div>
-      <div class="vv-panel-body">
-        <div class="vv-style-grid" id="style-grid"></div>
-        <button class="vv-btn-subtle" id="btn-reset-expr">
-          <span>↺</span>
-          <span>기본 스타일로 초기화 (Ctrl + 0)</span>
-        </button>
+
+      <!-- 2. Display Dimensions (배율, 너비, 높이만 배치) -->
+      <div class="vv-panel">
+        <div class="vv-panel-header">
+          <span>📐 캐릭터 크기 & 캔버스 해상도</span>
+          <span style="font-size:10px; color:var(--vv-text-dim);">실시간 동기화 (Sync)</span>
+        </div>
+        <div class="vv-panel-body">
+          <div class="vv-param-list">
+
+            <!-- Scale (0.2 Step) -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">배율 (Scale)</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-scale" class="vv-slider" min="0.4" max="3.0" step="0.2" value="1.0">
+                </div>
+                <div class="vv-param-val" id="val-scale">1.0x</div>
+                <button class="vv-btn-reset" id="btn-reset-scale" title="1.0x 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip" id="btn-scale-step-down">-0.2 축소</button>
+                <button class="vv-mini-chip" id="btn-scale-step-up">+0.2 확대</button>
+                <span style="margin-left:auto; font-size:10px; color:var(--vv-text-dim);">단축키: Ctrl + / -</span>
+              </div>
+            </div>
+
+            <!-- Canvas Width -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">너비 (Width)</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-w" class="vv-slider" min="280" max="1920" step="10" value="560">
+                </div>
+                <div class="vv-param-val" id="val-w">560px</div>
+                <button class="vv-btn-reset" id="btn-reset-w" title="기본 560px 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip chip-w" data-w="420">420px</button>
+                <button class="vv-mini-chip chip-w active" data-w="560">560px</button>
+                <button class="vv-mini-chip chip-w" data-w="700">700px</button>
+                <button class="vv-mini-chip chip-w" data-w="850">850px</button>
+              </div>
+            </div>
+
+            <!-- Canvas Height -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">높이 (Height)</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-h" class="vv-slider" min="350" max="1440" step="10" value="750">
+                </div>
+                <div class="vv-param-val" id="val-h">750px</div>
+                <button class="vv-btn-reset" id="btn-reset-h" title="기본 750px 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip chip-h" data-h="580">580px</button>
+                <button class="vv-mini-chip chip-h active" data-h="750">750px</button>
+                <button class="vv-mini-chip chip-h" data-h="900">900px</button>
+                <button class="vv-mini-chip chip-h" data-h="1100">1100px</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
+
     </div>
 
-    <!-- 2. Parameter Inspector -->
-    <div class="vv-panel">
-      <div class="vv-panel-header">
-        <span>🎛️ 디스플레이 & 모델 파라미터</span>
-        <span style="font-size:10px; color:var(--vv-text-dim);">실시간 동기화 (Sync)</span>
-      </div>
-      <div class="vv-panel-body">
-        <div class="vv-param-list">
+    <!-- ============================================================== -->
+    <!-- TAB 3: SUBTITLES & DIALOGUE (자막 모드 + 대사 표시 방식 통합)       -->
+    <!-- ============================================================== -->
+    <div id="tab-subtitles" class="vv-tab-content">
 
-          <!-- Scale (0.2 Step) -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">배율 (Scale)</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-scale" class="vv-slider" min="0.4" max="3.0" step="0.2" value="1.0">
-              </div>
-              <div class="vv-param-val" id="val-scale">1.0x</div>
-              <button class="vv-btn-reset" id="btn-reset-scale" title="1.0x 초기화">↺</button>
-            </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip" id="btn-scale-step-down">-0.2 축소</button>
-              <button class="vv-mini-chip" id="btn-scale-step-up">+0.2 확대</button>
-              <span style="margin-left:auto; font-size:10px; color:var(--vv-text-dim);">단축키: Ctrl + / -</span>
-            </div>
-          </div>
-
-          <!-- Canvas Width -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">너비 (Width)</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-w" class="vv-slider" min="280" max="1920" step="10" value="560">
-              </div>
-              <div class="vv-param-val" id="val-w">560px</div>
-              <button class="vv-btn-reset" id="btn-reset-w" title="기본 560px 초기화">↺</button>
-            </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip chip-w" data-w="420">420px</button>
-              <button class="vv-mini-chip chip-w active" data-w="560">560px</button>
-              <button class="vv-mini-chip chip-w" data-w="700">700px</button>
-              <button class="vv-mini-chip chip-w" data-w="850">850px</button>
-            </div>
-          </div>
-
-          <!-- Canvas Height -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">높이 (Height)</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-h" class="vv-slider" min="350" max="1440" step="10" value="750">
-              </div>
-              <div class="vv-param-val" id="val-h">750px</div>
-              <button class="vv-btn-reset" id="btn-reset-h" title="기본 750px 초기화">↺</button>
-            </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip chip-h" data-h="580">580px</button>
-              <button class="vv-mini-chip chip-h active" data-h="750">750px</button>
-              <button class="vv-mini-chip chip-h" data-h="900">900px</button>
-              <button class="vv-mini-chip chip-h" data-h="1100">1100px</button>
-            </div>
-          </div>
-
-          <!-- Subtitle & Bubble Mode -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">대사 표시 방식</span>
-              <div class="vv-preset-row" style="padding-left:0; margin-top:0;">
-                <button class="vv-mini-chip chip-mode active" data-mode="bubble">💭 만화 말풍선</button>
-                <button class="vv-mini-chip chip-mode" data-mode="bottom">📝 하단 자막</button>
-                <button class="vv-mini-chip chip-mode" data-mode="none">❌ 숨김</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Subtitle Size -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">글자 크기 (Font)</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-sub" class="vv-slider" min="10" max="36" step="1" value="14">
-              </div>
-              <div class="vv-param-val" id="val-sub">14px</div>
-              <button class="vv-btn-reset" id="btn-reset-sub" title="14px 초기화">↺</button>
-            </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip chip-sub" data-size="12">12px</button>
-              <button class="vv-mini-chip chip-sub active" data-size="14">14px</button>
-              <button class="vv-mini-chip chip-sub" data-size="17">17px</button>
-              <button class="vv-mini-chip chip-sub" data-size="20">20px</button>
-            </div>
-          </div>
-
-          <!-- Subtitle Toggle Switch -->
+      <!-- 1. Subtitle Mode Switch -->
+      <div class="vv-panel" style="border-color: rgba(132, 204, 22, 0.45); box-shadow: 0 0 12px rgba(132, 204, 22, 0.1);">
+        <div class="vv-panel-header" style="background: rgba(132, 204, 22, 0.12); color: #84CC16;">
+          <span>💬 컴패니언 자막 모드 설정</span>
+          <span style="font-size:10px; color:var(--vv-text-sub);">대화 및 알림 표시</span>
+        </div>
+        <div class="vv-panel-body" style="display:flex; flex-direction:column; gap:10px;">
+          
           <div class="vv-switch-container">
-            <span style="font-size:11px; color:var(--vv-text-sub);">실시간 텍스트 표시 (Ctrl + U)</span>
+            <div>
+              <div style="font-weight:700; color:#FFFFFF; font-size:12px;">💬 자막 모드 활성화 (컴패니언 대화)</div>
+              <div style="font-size:10px; color:var(--vv-text-dim); margin-top:2px;">
+                대화 및 발화 시 말풍선 및 하단 자막 표시 (단축키: Ctrl + J)
+              </div>
+            </div>
             <label class="vv-switch">
-              <input type="checkbox" id="chk-subtitle" checked>
+              <input type="checkbox" id="chk-sub-mode" checked>
               <span class="vv-switch-slider"></span>
             </label>
           </div>
 
-          <!-- Subtitle Live Preview Box -->
-          <div class="vv-subtitle-preview">
-            <div id="sub-preview" class="vv-subtitle-text" style="font-size: 14px;">
-              안녕인 것이다! 즌다몬인 것이다!
-            </div>
-          </div>
-
         </div>
       </div>
-    </div>
 
-    <!-- 2.5 PC Overload Alert Settings -->
-    <div class="vv-panel">
-      <div class="vv-panel-header">
-        <span>⚡ PC 리소스 과부하 감지 경고</span>
-        <span style="font-size:10px; color:var(--vv-text-dim);">시스템 보호 알림</span>
-      </div>
-      <div class="vv-panel-body">
-        <div class="vv-switch-container">
-          <span style="font-size:11px; color:var(--vv-text);">CPU/메모리 90% 이상 시 음성 경고</span>
-          <label class="vv-switch">
-            <input type="checkbox" id="chk-resource" checked>
-            <span class="vv-switch-slider"></span>
-          </label>
+      <!-- 2. Dialogue Display & Font Settings (디스플레이 탭에서 자막 탭으로 통합) -->
+      <div class="vv-panel">
+        <div class="vv-panel-header">
+          <span>📝 대사 표시 방식 & 글자 크기</span>
+          <span style="font-size:10px; color:var(--vv-text-dim);">스타일 상세 설정</span>
+        </div>
+        <div class="vv-panel-body">
+          <div class="vv-param-list">
+
+            <!-- Dialogue Display Mode -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">표시 방식</span>
+                <div class="vv-preset-row" style="padding-left:0; margin-top:0;">
+                  <button class="vv-mini-chip chip-mode active" data-mode="bubble">💭 만화 말풍선</button>
+                  <button class="vv-mini-chip chip-mode" data-mode="bottom">📝 하단 자막</button>
+                  <button class="vv-mini-chip chip-mode" data-mode="none">❌ 숨김</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subtitle Size -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">글자 크기 (Font)</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-sub" class="vv-slider" min="10" max="36" step="1" value="14">
+                </div>
+                <div class="vv-param-val" id="val-sub">14px</div>
+                <button class="vv-btn-reset" id="btn-reset-sub" title="14px 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip chip-sub" data-size="12">12px</button>
+                <button class="vv-mini-chip chip-sub active" data-size="14">14px</button>
+                <button class="vv-mini-chip chip-sub" data-size="17">17px</button>
+                <button class="vv-mini-chip chip-sub" data-size="20">20px</button>
+              </div>
+            </div>
+
+            <!-- Subtitle Toggle Switch -->
+            <div class="vv-switch-container">
+              <span style="font-size:11px; color:var(--vv-text-sub);">실시간 텍스트 표시 (Ctrl + U)</span>
+              <label class="vv-switch">
+                <input type="checkbox" id="chk-subtitle" checked>
+                <span class="vv-switch-slider"></span>
+              </label>
+            </div>
+
+            <!-- Subtitle Live Preview Box -->
+            <div class="vv-subtitle-preview">
+              <div id="sub-preview" class="vv-subtitle-text" style="font-size: 14px;">
+                안녕인 것이다! 즌다몬인 것이다!
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 2.8 VOICEVOX Voice Parameter Control -->
-    <div class="vv-panel">
-      <div class="vv-panel-header">
-        <span>🎙️ VOICEVOX 음성 파라미터 제어</span>
-        <span style="font-size:10px; color:var(--vv-text-dim);">속도 / 억양 / 음높이 / 볼륨 / 쉼표</span>
-      </div>
-      <div class="vv-panel-body">
-        <div class="vv-param-list">
-
-          <!-- 1. Voice Speed -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">말하기 속도</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-voice-speed" class="vv-slider" min="0.5" max="2.0" step="0.05" value="1.0">
+      <!-- 3. PC Overload Alert Settings -->
+      <div class="vv-panel">
+        <div class="vv-panel-header">
+          <span>⚡ PC 리소스 과부하 감지 경고</span>
+          <span style="font-size:10px; color:var(--vv-text-dim);">시스템 보호 알림</span>
+        </div>
+        <div class="vv-panel-body">
+          <div class="vv-switch-container">
+            <div>
+              <div style="font-weight:700; color:#FFFFFF; font-size:12px;">⚡ 리소스 과부하 자동 감지 경고</div>
+              <div style="font-size:10px; color:var(--vv-text-dim); margin-top:2px;">
+                CPU 및 메모리 점유율 90% 이상 시 경고 말풍선 및 알림 발화
               </div>
-              <div class="vv-param-val" id="val-voice-speed">1.00x</div>
-              <button class="vv-btn-reset" id="btn-reset-voice-speed" title="1.00x 초기화">↺</button>
             </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip chip-voice-speed" data-val="0.8">0.8x</button>
-              <button class="vv-mini-chip chip-voice-speed" data-val="1.0">1.0x (기본)</button>
-              <button class="vv-mini-chip chip-voice-speed" data-val="1.2">1.2x</button>
-              <button class="vv-mini-chip chip-voice-speed" data-val="1.4">1.4x</button>
-            </div>
+            <label class="vv-switch">
+              <input type="checkbox" id="chk-resource" checked>
+              <span class="vv-switch-slider"></span>
+            </label>
           </div>
-
-          <!-- 2. Voice Intonation -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">억양 (Intonation)</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-voice-intonation" class="vv-slider" min="0.0" max="2.0" step="0.05" value="1.0">
-              </div>
-              <div class="vv-param-val" id="val-voice-intonation">1.00x</div>
-              <button class="vv-btn-reset" id="btn-reset-voice-intonation" title="1.00x 초기화">↺</button>
-            </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip chip-voice-intonation" data-val="0.5">0.5x</button>
-              <button class="vv-mini-chip chip-voice-intonation" data-val="1.0">1.0x (기본)</button>
-              <button class="vv-mini-chip chip-voice-intonation" data-val="1.3">1.3x</button>
-              <button class="vv-mini-chip chip-voice-intonation" data-val="1.6">1.6x</button>
-            </div>
-          </div>
-
-          <!-- 3. Voice Pitch -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">음높이 (Pitch)</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-voice-pitch" class="vv-slider" min="-0.15" max="0.15" step="0.01" value="0.00">
-              </div>
-              <div class="vv-param-val" id="val-voice-pitch">+0.00</div>
-              <button class="vv-btn-reset" id="btn-reset-voice-pitch" title="0.00 초기화">↺</button>
-            </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip chip-voice-pitch" data-val="-0.05">-0.05</button>
-              <button class="vv-mini-chip chip-voice-pitch" data-val="0.0">0.00 (기본)</button>
-              <button class="vv-mini-chip chip-voice-pitch" data-val="0.05">+0.05</button>
-            </div>
-          </div>
-
-          <!-- 4. Voice Volume -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">음량 (Volume)</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-voice-volume" class="vv-slider" min="0.2" max="2.0" step="0.05" value="1.0">
-              </div>
-              <div class="vv-param-val" id="val-voice-volume">1.00x</div>
-              <button class="vv-btn-reset" id="btn-reset-voice-volume" title="1.00x 초기화">↺</button>
-            </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip chip-voice-volume" data-val="0.6">0.6x</button>
-              <button class="vv-mini-chip chip-voice-volume" data-val="1.0">1.0x (기본)</button>
-              <button class="vv-mini-chip chip-voice-volume" data-val="1.4">1.4x</button>
-            </div>
-          </div>
-
-          <!-- 5. Voice Pause Duration -->
-          <div>
-            <div class="vv-param-row">
-              <span class="vv-param-label">쉼표 간격 (Pause)</span>
-              <div class="vv-slider-container">
-                <input type="range" id="slider-voice-pause" class="vv-slider" min="0.10" max="1.50" step="0.05" value="0.35">
-              </div>
-              <div class="vv-param-val" id="val-voice-pause">0.35x</div>
-              <button class="vv-btn-reset" id="btn-reset-voice-pause" title="0.35x 초기화">↺</button>
-            </div>
-            <div class="vv-preset-row">
-              <button class="vv-mini-chip chip-voice-pause" data-val="0.20">0.20x (빠름)</button>
-              <button class="vv-mini-chip chip-voice-pause" data-val="0.35">0.35x (기본)</button>
-              <button class="vv-mini-chip chip-voice-pause" data-val="0.60">0.60x</button>
-              <button class="vv-mini-chip chip-voice-pause" data-val="1.00">1.00x (원음)</button>
-            </div>
-          </div>
-
         </div>
       </div>
+
     </div>
 
-    <!-- 3. Speech Test (Script Cell UI) -->
-    <div class="vv-cell-container">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:12px; font-weight:700; color:var(--vv-primary);">💬 음성 합성 및 립싱크 테스트</span>
+    <!-- ============================================================== -->
+    <!-- TAB 4: VOICE & SYNTHESIS (음성 파라미터 + 립싱크 테스트 통합)       -->
+    <!-- ============================================================== -->
+    <div id="tab-voice" class="vv-tab-content">
+
+      <!-- 1. Unified Speech & Lip-Sync Test Box -->
+      <div class="vv-cell-container" style="border-color: rgba(132, 204, 22, 0.4);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:12px; font-weight:700; color:var(--vv-primary);">💬 실시간 음성 합성 & 립싱크 테스트</span>
+          <span style="font-size:10px; color:var(--vv-text-dim);">설정된 파라미터로 즉시 발화</span>
+        </div>
+        <div class="vv-script-box">
+          <button class="vv-btn-play" id="btn-speak" title="발화하기">▶</button>
+          <div class="vv-cell-num">1</div>
+          <input type="text" id="inp-speech" class="vv-input-script" value="보쿠는 즌다몬인 것이다! 잘 부탁하는 것이다!" placeholder="테스트할 대사를 입력하세요...">
+        </div>
       </div>
-      <div class="vv-script-box">
-        <button class="vv-btn-play" id="btn-speak" title="발화하기">▶</button>
-        <div class="vv-cell-num">1</div>
-        <input type="text" id="inp-speech" class="vv-input-script" value="보쿠는 즌다몬인 것이다! 잘 부탁하는 것이다!" placeholder="테스트할 대사를 입력하세요...">
+
+      <!-- 2. VOICEVOX Voice Parameters Control -->
+      <div class="vv-panel">
+        <div class="vv-panel-header">
+          <span>🎙️ VOICEVOX 음성 파라미터 제어</span>
+          <span style="font-size:10px; color:var(--vv-text-dim);">속도 / 억양 / 음높이 / 볼륨 / 쉼표</span>
+        </div>
+        <div class="vv-panel-body">
+          <div class="vv-param-list">
+
+            <!-- 1. Voice Speed -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">말하기 속도</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-voice-speed" class="vv-slider" min="0.5" max="2.0" step="0.05" value="1.0">
+                </div>
+                <div class="vv-param-val" id="val-voice-speed">1.00x</div>
+                <button class="vv-btn-reset" id="btn-reset-voice-speed" title="1.00x 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip chip-voice-speed" data-val="0.8">0.8x</button>
+                <button class="vv-mini-chip chip-voice-speed" data-val="1.0">1.0x (기본)</button>
+                <button class="vv-mini-chip chip-voice-speed" data-val="1.2">1.2x</button>
+                <button class="vv-mini-chip chip-voice-speed" data-val="1.4">1.4x</button>
+              </div>
+            </div>
+
+            <!-- 2. Voice Intonation -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">억양 (Intonation)</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-voice-intonation" class="vv-slider" min="0.0" max="2.0" step="0.05" value="1.0">
+                </div>
+                <div class="vv-param-val" id="val-voice-intonation">1.00x</div>
+                <button class="vv-btn-reset" id="btn-reset-voice-intonation" title="1.00x 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip chip-voice-intonation" data-val="0.5">0.5x</button>
+                <button class="vv-mini-chip chip-voice-intonation" data-val="1.0">1.0x (기본)</button>
+                <button class="vv-mini-chip chip-voice-intonation" data-val="1.3">1.3x</button>
+                <button class="vv-mini-chip chip-voice-intonation" data-val="1.6">1.6x</button>
+              </div>
+            </div>
+
+            <!-- 3. Voice Pitch -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">음높이 (Pitch)</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-voice-pitch" class="vv-slider" min="-0.15" max="0.15" step="0.01" value="0.00">
+                </div>
+                <div class="vv-param-val" id="val-voice-pitch">+0.00</div>
+                <button class="vv-btn-reset" id="btn-reset-voice-pitch" title="0.00 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip chip-voice-pitch" data-val="-0.05">-0.05</button>
+                <button class="vv-mini-chip chip-voice-pitch" data-val="0.0">0.00 (기본)</button>
+                <button class="vv-mini-chip chip-voice-pitch" data-val="0.05">+0.05</button>
+              </div>
+            </div>
+
+            <!-- 4. Voice Volume -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">음량 (Volume)</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-voice-volume" class="vv-slider" min="0.2" max="2.0" step="0.05" value="1.0">
+                </div>
+                <div class="vv-param-val" id="val-voice-volume">1.00x</div>
+                <button class="vv-btn-reset" id="btn-reset-voice-volume" title="1.00x 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip chip-voice-volume" data-val="0.6">0.6x</button>
+                <button class="vv-mini-chip chip-voice-volume" data-val="1.0">1.0x (기본)</button>
+                <button class="vv-mini-chip chip-voice-volume" data-val="1.4">1.4x</button>
+              </div>
+            </div>
+
+            <!-- 5. Voice Pause Duration -->
+            <div>
+              <div class="vv-param-row">
+                <span class="vv-param-label">쉼표 간격 (Pause)</span>
+                <div class="vv-slider-container">
+                  <input type="range" id="slider-voice-pause" class="vv-slider" min="0.10" max="1.50" step="0.05" value="0.35">
+                </div>
+                <div class="vv-param-val" id="val-voice-pause">0.35x</div>
+                <button class="vv-btn-reset" id="btn-reset-voice-pause" title="0.35x 초기화">↺</button>
+              </div>
+              <div class="vv-preset-row">
+                <button class="vv-mini-chip chip-voice-pause" data-val="0.20">0.20x (빠름)</button>
+                <button class="vv-mini-chip chip-voice-pause" data-val="0.35">0.35x (기본)</button>
+                <button class="vv-mini-chip chip-voice-pause" data-val="0.60">0.60x</button>
+                <button class="vv-mini-chip chip-voice-pause" data-val="1.00">1.00x (원음)</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
+
+
+
     </div>
 
   </div>
@@ -682,7 +1085,110 @@
   <script>
     const bc = new BroadcastChannel('zundamon_channel');
 
-    // Official VOICEVOX style mapped expressions
+    // 0. Tab Navigation Switching Logic
+    const tabButtons = document.querySelectorAll('.vv-tab-btn');
+    const tabContents = document.querySelectorAll('.vv-tab-content');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        tabButtons.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+
+        btn.classList.add('active');
+        const targetContent = document.getElementById(targetTab);
+        if (targetContent) targetContent.classList.add('active');
+      });
+    });
+
+    // 1. Emotion Lab Card Play Handlers
+    const emotionCards = document.querySelectorAll('.vv-btn-emo-play');
+    emotionCards.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const emo = btn.dataset.emo;
+        const text = btn.dataset.text;
+        const origText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> <span>재생 중...</span>';
+
+        fetch('/api/speak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            raw_text: text,
+            display_text: text,
+            emotion: emo
+          })
+        })
+        .then(r => r.json())
+        .then(res => {
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = origText;
+          }, 1800);
+        })
+        .catch(err => {
+          btn.disabled = false;
+          btn.innerHTML = origText;
+        });
+      });
+    });
+
+    // Custom Emotion Speech Tester
+    const btnPlayCustomEmo = document.getElementById('btn-play-custom-emo');
+    const inpCustomEmo = document.getElementById('inp-custom-emo');
+    const selEmoMode = document.getElementById('sel-emo-mode');
+    const boxEmoFeedback = document.getElementById('box-emo-feedback');
+    const txtFeedbackEmo = document.getElementById('txt-feedback-emo');
+    const txtFeedbackDetail = document.getElementById('txt-feedback-detail');
+
+    if (btnPlayCustomEmo && inpCustomEmo) {
+      btnPlayCustomEmo.addEventListener('click', () => {
+        const text = inpCustomEmo.value.trim();
+        if (!text) return;
+        const selectedMode = selEmoMode.value;
+        const payload = {
+          text: text,
+          raw_text: text,
+          display_text: text
+        };
+        if (selectedMode !== 'auto') {
+          payload.emotion = selectedMode;
+        }
+
+        btnPlayCustomEmo.disabled = true;
+        btnPlayCustomEmo.textContent = '⏳';
+
+        fetch('/api/speak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+          btnPlayCustomEmo.disabled = false;
+          btnPlayCustomEmo.textContent = '▶';
+          if (boxEmoFeedback && res.info) {
+            boxEmoFeedback.style.display = 'flex';
+            txtFeedbackEmo.textContent = res.emotion || res.info.emotion || 'normal';
+            txtFeedbackDetail.textContent = `표정: ${res.info.expression || '-'}, 모션: ${res.info.motion || '-'}`;
+          }
+        })
+        .catch(err => {
+          btnPlayCustomEmo.disabled = false;
+          btnPlayCustomEmo.textContent = '▶';
+        });
+      });
+
+      inpCustomEmo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          btnPlayCustomEmo.click();
+        }
+      });
+    }
+
+    // Official VOICEVOX style mapped expressions (Ctrl + 1 ~ 9)
     const expressionsList = [
       { key: '1', id: 'exp_smile', name: 'ノーマル', kr: '미소', icon: '😊' },
       { key: '2', id: 'exp_laugh', name: 'あまあま', kr: '활짝', icon: '😆' },
@@ -716,7 +1222,7 @@
       bc.postMessage({ type: 'expression_reset' });
     });
 
-    // 1. Scale Control (0.2 Step)
+    // Scale Control (0.2 Step)
     const sliderScale = document.getElementById('slider-scale');
     const valScale = document.getElementById('val-scale');
     const btnResetScale = document.getElementById('btn-reset-scale');
@@ -748,7 +1254,7 @@
       bc.postMessage({ type: 'scale_reset' });
     });
 
-    // 2. Canvas Dimensions (Width & Height)
+    // Canvas Dimensions (Width & Height)
     const sliderW = document.getElementById('slider-w');
     const valW = document.getElementById('val-w');
     const sliderH = document.getElementById('slider-h');
@@ -798,7 +1304,7 @@
     btnResetW.addEventListener('click', () => applyDimensions(560, sliderH.value));
     btnResetH.addEventListener('click', () => applyDimensions(sliderW.value, 750));
 
-    // 3. Subtitle Controls
+    // Subtitle & Display Mode Controls
     const chkSubtitle = document.getElementById('chk-subtitle');
     const sliderSub = document.getElementById('slider-sub');
     const valSub = document.getElementById('val-sub');
@@ -844,7 +1350,7 @@
       updateSubtitle(chkSubtitle.checked, 14);
     });
 
-    // Display Mode & Assistant Toggles
+    // Display Mode (말풍선 / 하단 자막 / 숨김)
     const chipsMode = document.querySelectorAll('.chip-mode');
     let currentDisplayMode = 'bubble';
 
@@ -880,7 +1386,7 @@
       });
     }
 
-    // 4. Voice Speech Test
+    // Unified Speech & Lip-Sync Test
     const inpSpeech = document.getElementById('inp-speech');
     const btnSpeak = document.getElementById('btn-speak');
 
@@ -943,7 +1449,7 @@
     document.querySelectorAll('.chip-voice-volume').forEach(c => c.addEventListener('click', () => updateVoiceVolume(parseFloat(c.dataset.val), true)));
     document.querySelectorAll('.chip-voice-pause').forEach(c => c.addEventListener('click', () => updateVoicePause(parseFloat(c.dataset.val), true)));
 
-    // 0. Subtitle Mode Control
+    // Subtitle Mode Switch
     const chkSubMode = document.getElementById('chk-sub-mode');
 
     function updateSubMode(enabled, sync = true) {
@@ -968,7 +1474,6 @@
       if (!data) return;
       if (data.type === 'scale_updated' && typeof data.scale === 'number') {
         applyScale(data.scale, true);
-
       } else if (data.type === 'subtitle_mode_toggle') {
         chkSubMode.checked = !!data.enabled;
       }
@@ -1002,7 +1507,6 @@
 
         if (typeof cfg.resource_alert === 'boolean' && chkResource) chkResource.checked = cfg.resource_alert;
 
-                
         if (typeof cfg.voice_speed === 'number') updateVoiceSpeed(cfg.voice_speed, false);
         if (typeof cfg.voice_intonation === 'number') updateVoiceIntonation(cfg.voice_intonation, false);
         if (typeof cfg.voice_pitch === 'number') updateVoicePitch(cfg.voice_pitch, false);

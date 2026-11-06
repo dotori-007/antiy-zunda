@@ -35,8 +35,12 @@ description: 즌다몬(Zundamon) 모드를 활성화합니다. 즌다몬의 한�
   ```powershell
   schtasks /run /tn "ZundamonMascot"
   ```
-* **즌다몬 음성 출력 (Live2D 립싱크 연동)**:
-  사용자에게 답변할 때, 핵심 멘트(1문장)를 한국어로 전달하면 내부에서 음소 변환(G2P)을 거쳐 즌다몬 음성으로 초고속 재생:
+* **즌다몬 음성 출력 (Live2D 립싱크 및 감정 연동)**:
+  사용자에게 답변할 때, 핵심 멘트(1문장)를 한국어로 전달하면 내부에서 음소 변환(G2P)과 감정 분석을 거쳐 즌다몬 음성, Live2D 표정 및 모션으로 초고속 동기화 재생:
   ```powershell
   & {PYTHON_EXE} "{COMPANION_DIR}\speak.py" "알겠는 것이다! 이제부터 '~인 것이다'로 말하는 것이다!"
+
+  # 감정 지정 발화 (옵션): --emotion <crying|panic|angry_pout|joy_cheer|smug_pride|thinking|love_shy|chop_action>
+  & {PYTHON_EXE} "{COMPANION_DIR}\speak.py" --emotion joy_cheer "대성공인 것이다! 만세!"
+  & {PYTHON_EXE} "{COMPANION_DIR}\speak.py" --emotion crying "오류가 나서 슬픈 것이다 ㅠㅠ"
   ```
