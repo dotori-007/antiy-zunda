@@ -74,18 +74,21 @@ def find_voicevox_engine():
 
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
-user32 = ctypes.windll.user32
-user32.GetCursorPos.argtypes = [ctypes.c_void_p]
-user32.IsWindow.argtypes = [wintypes.HWND]
-user32.IsWindow.restype = wintypes.BOOL
-user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.c_void_p]
-user32.GetWindowRect.restype = wintypes.BOOL
-user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.UINT]
-user32.SetWindowPos.restype = wintypes.BOOL
-user32.ReleaseCapture.argtypes = []
-user32.ReleaseCapture.restype = wintypes.BOOL
-user32.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, ctypes.c_size_t, ctypes.c_ssize_t]
-user32.SendMessageW.restype = ctypes.c_ssize_t
+try:
+    user32 = ctypes.windll.user32
+    user32.GetCursorPos.argtypes = [ctypes.c_void_p]
+    user32.IsWindow.argtypes = [wintypes.HWND]
+    user32.IsWindow.restype = wintypes.BOOL
+    user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.c_void_p]
+    user32.GetWindowRect.restype = wintypes.BOOL
+    user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, wintypes.UINT]
+    user32.SetWindowPos.restype = wintypes.BOOL
+    user32.ReleaseCapture.argtypes = []
+    user32.ReleaseCapture.restype = wintypes.BOOL
+    user32.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, ctypes.c_size_t, ctypes.c_ssize_t]
+    user32.SendMessageW.restype = ctypes.c_ssize_t
+except (AttributeError, Exception):
+    user32 = None
 
 
 class POINT(ctypes.Structure):
@@ -750,8 +753,10 @@ resource_monitor = ResourceMonitor()
 
 def run_server():
     try:
-        log_msg("run_server() starting bottle on 127.0.0.1:8989...")
-        app.run(host="127.0.0.1", port=8989, quiet=True)
+        host = os.environ.get("HOST", "0.0.0.0") if not user32 else "127.0.0.1"
+        port = int(os.environ.get("PORT", os.environ.get("SERVER_PORT", 8989)))
+        log_msg(f"run_server() starting bottle on {host}:{port}...")
+        app.run(host=host, port=port, quiet=True)
     except Exception as e:
         log_msg(f"run_server() FATAL: {traceback.format_exc()}")
 
@@ -800,6 +805,14 @@ if __name__ == "__main__":
 
     # Pre-warm VOICEVOX in background thread (never blocks GUI window startup)
     threading.Thread(target=ensure_voicevox_running, daemon=True).start()
+
+    # Server mode (for Linux hosting like Weirdhost, or headless execution)
+    if not user32 or "--server" in sys.argv:
+        host = os.environ.get("HOST", "0.0.0.0")
+        port = int(os.environ.get("PORT", os.environ.get("SERVER_PORT", 8989)))
+        print(f"🌱 즌다몬 웹 서버 모드로 실행됩니다: http://{host}:{port}")
+        app.run(host=host, port=port)
+        sys.exit(0)
 
     # Configurable window dimensions (saved in config.json)
     cfg = load_config()

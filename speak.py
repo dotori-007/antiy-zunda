@@ -54,6 +54,7 @@ def speak(text, speaker=None, emotion=None):
     emo_profile = analyze_emotion(text, default_speaker=3)
     clean_text = emo_profile.get("clean_text", text)
     actual_speaker = speaker if speaker is not None else emo_profile.get("speaker", 3)
+    emo_key = emotion if emotion is not None else emo_profile.get("key")
 
     tts_text = to_katakana(clean_text)
     try:
