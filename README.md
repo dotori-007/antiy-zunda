@@ -176,6 +176,13 @@ antiy-zunda/
 
 ## 📄 라이선스 및 크레딧 (Credits & License)
 
-- **Character & Voice**: [Tohoku Zunko Project (東北ずん子・ずんだもんプロジェクト)](https://zunko.jp/) / [VOICEVOX: ずんだもん](https://voicevox.hiroshiba.jp/)
-- **Live2D Cubism**: Live2D Inc.
-- **License**: MIT License (캐릭터 음성 및 모델 사용 시 캐릭터 공식 가이드라인을 준수해 주세요)
+- **코드 라이선스**: [MIT License](LICENSE) (Copyright (c) 2026 dotori-007)
+- **캐릭터 및 음성 저작권 (Character & Voice)**:
+  - 본 프로젝트에 활용된 캐릭터 '즌다몬(ずんだもん)'의 저작권은 **SSS合同会社(SSS LLC)**에 귀속됩니다.
+  - 이용 시 [도호쿠 즌코・즌다몬 프로젝트 공식 가이드라인](https://zunko.jp/guideline.html)을 준수해야 합니다.
+  - 음성 합성 엔진은 [VOICEVOX: ずんだもん](https://voicevox.hiroshiba.jp/)을 사용합니다.
+- **Live2D Cubism Core**:
+  - Live2D Cubism SDK for Web은 [Live2D Inc.의 독점 라이선스 규정](https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html)을 따릅니다.
+- **보안 및 환경 설정**:
+  - 로컬 데스크톱 상주 모드에서는 루프백 인터페이스(`127.0.0.1:8989`)로만 바인딩되어 외부 네트워크 노출이 원천 차단됩니다.
+  - 원격/컨테이너 모드 구동 시 환경 변수(`HOST`, `PORT`)를 통해 안전하게 포트를 제어할 수 있습니다.
