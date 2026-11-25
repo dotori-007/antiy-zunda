@@ -7,24 +7,31 @@ import hashlib
 import tempfile
 import urllib.request
 import urllib.parse
+import http.client
 import threading
 import subprocess
 import ctypes
 import traceback
 from ctypes import wintypes
-from bottle import Bottle, request, response, static_file, HTTPResponse
+from bottle import Bottle, request, response, static_file, HTTPResponse, ServerAdapter
 import webview
-
-
-
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
 
 CRASH_LOG = os.path.join(APP_DIR, "crash.log")
+
 def log_msg(msg):
     try:
+        if os.path.exists(CRASH_LOG) and os.path.getsize(CRASH_LOG) > 2 * 1024 * 1024:
+            old_log = os.path.join(APP_DIR, "crash.log.old")
+            try:
+                if os.path.exists(old_log):
+                    os.remove(old_log)
+                os.rename(CRASH_LOG, old_log)
+            except Exception:
+                pass
         with open(CRASH_LOG, "a", encoding="utf-8") as f:
             f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}\n")
     except Exception:
@@ -32,7 +39,6 @@ def log_msg(msg):
 
 sys.excepthook = lambda t, v, tb: log_msg(f"Unhandled: {''.join(traceback.format_exception(t, v, tb))}")
 threading.excepthook = lambda a: log_msg(f"Thread: {a.exc_type} {a.exc_value}\n{''.join(traceback.format_tb(a.exc_traceback))}")
-
 
 WV2_STORAGE = os.path.join(tempfile.gettempdir(), "zundamon_wv2_data")
 os.makedirs(WV2_STORAGE, exist_ok=True)
@@ -48,6 +54,7 @@ except Exception as ee:
     log_msg(f"Failed to import emotion_engine: {ee}")
     def analyze_emotion(t, default_speaker=3):
         return {"key": "normal", "expression": "exp_smile", "motion": "mtnBody_yes", "params": {}, "speaker": default_speaker, "clean_text": t}
+
 # Dynamic Model Directory Resolution
 MODEL_DIR = os.path.join(APP_DIR, "model")
 if not os.path.exists(MODEL_DIR):
@@ -56,9 +63,15 @@ if not os.path.exists(MODEL_DIR):
         MODEL_DIR = fallback_model
 
 AUDIO_DIR = os.path.join(APP_DIR, "audio_cache")
+os.makedirs(AUDIO_DIR, exist_ok=True)
 VOICEVOX_URL = "http://127.0.0.1:50021"
 
+_cached_engine_path = None
 def find_voicevox_engine():
+    global _cached_engine_path
+    if _cached_engine_path and os.path.exists(_cached_engine_path):
+        return _cached_engine_path
+
     candidates = [
         os.path.join(APP_DIR, "vv-engine", "run.exe"),
         os.path.expandvars(r"%LOCALAPPDATA%\Programs\VOICEVOX\run.exe"),
@@ -69,10 +82,9 @@ def find_voicevox_engine():
     ]
     for p in candidates:
         if os.path.exists(p):
+            _cached_engine_path = p
             return p
     return None
-
-os.makedirs(AUDIO_DIR, exist_ok=True)
 
 try:
     user32 = ctypes.windll.user32
@@ -89,7 +101,6 @@ try:
     user32.SendMessageW.restype = ctypes.c_ssize_t
 except (AttributeError, Exception):
     user32 = None
-
 
 class POINT(ctypes.Structure):
     _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
@@ -117,14 +128,16 @@ def get_idle_seconds():
     try:
         lii = LASTINPUTINFO()
         lii.cbSize = ctypes.sizeof(LASTINPUTINFO)
-        if user32.GetLastInputInfo(ctypes.byref(lii)):
+        if user32 and user32.GetLastInputInfo(ctypes.byref(lii)):
             tick = ctypes.windll.kernel32.GetTickCount()
             return max(0.0, (tick - lii.dwTime) / 1000.0)
     except Exception:
         pass
     return 0.0
 
+_last_cpu_times = None
 def get_system_load():
+    global _last_cpu_times
     mem_load = 0
     try:
         stat = MEMORYSTATUSEX()
@@ -138,18 +151,20 @@ def get_system_load():
     try:
         def _to_int(ft):
             return (ft.dwHighDateTime << 32) + ft.dwLowDateTime
-        idle1, kernel1, user1 = FILETIME(), FILETIME(), FILETIME()
-        ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle1), ctypes.byref(kernel1), ctypes.byref(user1))
-        time.sleep(0.12)
-        idle2, kernel2, user2 = FILETIME(), FILETIME(), FILETIME()
-        ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle2), ctypes.byref(kernel2), ctypes.byref(user2))
-
-        idle = _to_int(idle2) - _to_int(idle1)
-        kernel = _to_int(kernel2) - _to_int(kernel1)
-        user = _to_int(user2) - _to_int(user1)
-        total = kernel + user
-        if total > 0:
-            cpu_load = max(0.0, min(100.0, 100.0 * (total - idle) / total))
+        idle, kernel, user = FILETIME(), FILETIME(), FILETIME()
+        if ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle), ctypes.byref(kernel), ctypes.byref(user)):
+            i_val = _to_int(idle)
+            k_val = _to_int(kernel)
+            u_val = _to_int(user)
+            if _last_cpu_times is not None:
+                prev_i, prev_k, prev_u = _last_cpu_times
+                d_idle = i_val - prev_i
+                d_kernel = k_val - prev_k
+                d_user = u_val - prev_u
+                total = d_kernel + d_user
+                if total > 0:
+                    cpu_load = max(0.0, min(100.0, 100.0 * (total - d_idle) / total))
+            _last_cpu_times = (i_val, k_val, u_val)
     except Exception:
         pass
 
@@ -160,6 +175,9 @@ settings_window = None
 class TrackerApi:
     def __init__(self):
         self.hwnd = None
+        self._cached_sw = 1920
+        self._cached_sh = 1080
+        self._last_metrics_time = 0.0
 
     def set_hwnd(self, hwnd):
         self.hwnd = hwnd
@@ -201,7 +219,7 @@ class TrackerApi:
                 inst = wf.BrowserView.instances.get(settings_window.uid)
                 if inst is not None and not inst.IsDisposed and inst.IsHandleCreated:
                     hwnd = inst.Handle.ToInt64()
-                    if user32.IsWindow(hwnd):
+                    if user32 and user32.IsWindow(hwnd):
                         log_msg("settings_window is open -> closing (toggle)")
                         try:
                             inst.Invoke(Action(lambda: inst.Close()))
@@ -253,15 +271,14 @@ class TrackerApi:
         return self.toggle_settings()
 
     def start_drag(self):
-        if self.hwnd and user32.IsWindow(self.hwnd):
+        if user32 and self.hwnd and user32.IsWindow(self.hwnd):
             user32.ReleaseCapture()
             user32.SendMessageW(self.hwnd, 0x0112, 0xF012, 0)
             return True
         return False
 
     def move_window(self, dx, dy):
-
-        if self.hwnd and user32.IsWindow(self.hwnd):
+        if user32 and self.hwnd and user32.IsWindow(self.hwnd):
             rect = wintypes.RECT()
             user32.GetWindowRect(self.hwnd, ctypes.byref(rect))
             user32.SetWindowPos(self.hwnd, 0, rect.left + int(dx), rect.top + int(dy), 0, 0, 0x0001 | 0x0004 | 0x0010)
@@ -269,7 +286,7 @@ class TrackerApi:
         return False
 
     def resize_window(self, width, height):
-        if self.hwnd and user32.IsWindow(self.hwnd):
+        if user32 and self.hwnd and user32.IsWindow(self.hwnd):
             rect = wintypes.RECT()
             user32.GetWindowRect(self.hwnd, ctypes.byref(rect))
             new_w = max(280, min(1920, int(width)))
@@ -284,31 +301,33 @@ class TrackerApi:
             return True
         return False
 
-
-
     def get_tracking(self):
+        if not user32:
+            return {"fx": 0.0, "fy": 0.0}
+
+        now = time.time()
+        if now - self._last_metrics_time > 5.0:
+            self._cached_sw = user32.GetSystemMetrics(0) or 1920
+            self._cached_sh = user32.GetSystemMetrics(1) or 1080
+            self._last_metrics_time = now
+
         pt = POINT()
         user32.GetCursorPos(ctypes.byref(pt))
 
         rect = wintypes.RECT()
         if self.hwnd and user32.IsWindow(self.hwnd):
             user32.GetWindowRect(self.hwnd, ctypes.byref(rect))
-            center_x = (rect.left + rect.right) / 2
-            center_y = (rect.top + rect.bottom) / 2
+            center_x = (rect.left + rect.right) * 0.5
+            center_y = (rect.top + rect.bottom) * 0.5
         else:
-            center_x = 960
-            center_y = 540
+            center_x = self._cached_sw * 0.5
+            center_y = self._cached_sh * 0.5
 
         dx = pt.x - center_x
         dy = pt.y - center_y
 
-        sw = user32.GetSystemMetrics(0) or 1920
-        sh = user32.GetSystemMetrics(1) or 1080
-
-        # Full-screen 100% free tracking:
-        # Normalize distance based on maximum reach from companion center to screen edges
-        max_dist_x = max(center_x, sw - center_x) or 1.0
-        max_dist_y = max(center_y, sh - center_y) or 1.0
+        max_dist_x = max(center_x, self._cached_sw - center_x) or 1.0
+        max_dist_y = max(center_y, self._cached_sh - center_y) or 1.0
 
         fx = max(-1.0, min(1.0, dx / max_dist_x))
         fy = max(-1.0, min(1.0, -dy / max_dist_y))
@@ -322,21 +341,52 @@ tracker_api = TrackerApi()
 
 app = Bottle()
 
-@app.hook('before_request')
-def log_request():
-    if request.path != "/api/poll_speech":
-        log_msg(f"HTTP {request.method} {request.path}")
-
-
 current_audio_id = 0
 latest_audio_info = None
 voicevox_ready = False
 
-# Non-blocking VOICEVOX startup check
-def ensure_voicevox_running():
+# Persistent HTTP Connection to VOICEVOX
+_vv_conn = None
+_vv_conn_lock = threading.Lock()
+
+def voicevox_call(method, path, body=None, headers=None, timeout=12):
+    global _vv_conn, voicevox_ready
+    if headers is None:
+        headers = {}
+
+    with _vv_conn_lock:
+        for attempt in range(2):
+            try:
+                if _vv_conn is None:
+                    _vv_conn = http.client.HTTPConnection("127.0.0.1", 50021, timeout=timeout)
+                _vv_conn.request(method, path, body=body, headers=headers)
+                resp = _vv_conn.getresponse()
+                data = resp.read()
+                if resp.status == 200:
+                    voicevox_ready = True
+                    return data
+                else:
+                    raise RuntimeError(f"VOICEVOX {path} returned HTTP {resp.status}")
+            except Exception as ex:
+                if _vv_conn is not None:
+                    try:
+                        _vv_conn.close()
+                    except Exception:
+                        pass
+                    _vv_conn = None
+                if attempt == 1:
+                    voicevox_ready = False
+                    raise ex
+                ensure_voicevox_running(force=True)
+
+def ensure_voicevox_running(force=False):
     global voicevox_ready
+    if voicevox_ready and not force:
+        return True
+
     try:
-        with urllib.request.urlopen(f"{VOICEVOX_URL}/version", timeout=1) as resp:
+        req = urllib.request.Request(f"{VOICEVOX_URL}/version")
+        with urllib.request.urlopen(req, timeout=0.8) as resp:
             if resp.status == 200:
                 voicevox_ready = True
                 return True
@@ -356,9 +406,9 @@ def ensure_voicevox_running():
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                              startupinfo=startupinfo, creationflags=flags)
             for _ in range(25):
-                time.sleep(0.5)
+                time.sleep(0.4)
                 try:
-                    with urllib.request.urlopen(f"{VOICEVOX_URL}/version", timeout=1) as resp:
+                    with urllib.request.urlopen(f"{VOICEVOX_URL}/version", timeout=0.6) as resp:
                         if resp.status == 200:
                             voicevox_ready = True
                             return True
@@ -369,8 +419,12 @@ def ensure_voicevox_running():
     return False
 
 CONFIG_PATH = os.path.join(APP_DIR, "config.json")
+_config_cache = None
+_config_mtime = 0.0
+_config_lock = threading.Lock()
 
 def load_config():
+    global _config_cache, _config_mtime
     default_cfg = {
         "win_w": 560,
         "win_h": 750,
@@ -385,26 +439,73 @@ def load_config():
         "voice_volume": 1.0,
         "voice_pause": 0.35
     }
-    if os.path.exists(CONFIG_PATH):
-        try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                if isinstance(data, dict):
-                    default_cfg.update(data)
-                    return default_cfg
-        except Exception:
-            pass
-    return default_cfg
+    with _config_lock:
+        if os.path.exists(CONFIG_PATH):
+            try:
+                mtime = os.path.getmtime(CONFIG_PATH)
+                if _config_cache is not None and mtime == _config_mtime:
+                    return dict(_config_cache)
+                with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        default_cfg.update(data)
+                        _config_cache = dict(default_cfg)
+                        _config_mtime = mtime
+                        return dict(default_cfg)
+            except Exception:
+                pass
+        if _config_cache is not None:
+            return dict(_config_cache)
+        _config_cache = dict(default_cfg)
+        return dict(default_cfg)
 
 def save_config(cfg):
-    try:
-        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(cfg, f, indent=2)
-    except Exception as e:
-        log_msg(f"save_config error: {e}")
+    global _config_cache, _config_mtime
+    with _config_lock:
+        try:
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(cfg, f, indent=2)
+            _config_cache = dict(cfg)
+            _config_mtime = os.path.getmtime(CONFIG_PATH)
+        except Exception as e:
+            log_msg(f"save_config error: {e}")
 
+_last_prune_time = 0.0
+def prune_audio_cache(max_files=200, max_bytes=80 * 1024 * 1024):
+    global _last_prune_time
+    now = time.time()
+    if now - _last_prune_time < 300.0:
+        return
+    _last_prune_time = now
 
-# Fast synthesis with MD5 hash caching and configurable voice parameters
+    def _prune():
+        try:
+            if not os.path.exists(AUDIO_DIR):
+                return
+            files = []
+            total_size = 0
+            for entry in os.scandir(AUDIO_DIR):
+                if entry.is_file() and entry.name.endswith(".wav"):
+                    stat = entry.stat()
+                    files.append((stat.st_mtime, stat.st_size, entry.path))
+                    total_size += stat.st_size
+
+            if len(files) > max_files or total_size > max_bytes:
+                files.sort(key=lambda x: x[0])
+                target_count = int(max_files * 0.75)
+                target_size = int(max_bytes * 0.75)
+                while files and (len(files) > target_count or total_size > target_size):
+                    _, size, path = files.pop(0)
+                    try:
+                        os.remove(path)
+                        total_size -= size
+                    except Exception:
+                        pass
+        except Exception as e:
+            log_msg(f"prune_audio_cache error: {e}")
+
+    threading.Thread(target=_prune, daemon=True).start()
+
 def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=None, motion=None,
                         speed=None, pitch=None, intonation=None, volume=None, pause=None,
                         params=None, emotion=None):
@@ -438,15 +539,12 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=Non
         }
         return latest_audio_info
 
-    # 2. Synthesize via VOICEVOX
+    # 2. Synthesize via persistent VOICEVOX connection
     ensure_voicevox_running()
 
-    query_url = f"{VOICEVOX_URL}/audio_query?text={urllib.parse.quote(synth_text)}&speaker={speaker}"
-    req = urllib.request.Request(query_url, method="POST")
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        query_data = resp.read()
+    query_path = f"/audio_query?text={urllib.parse.quote(synth_text)}&speaker={speaker}"
+    query_data = voicevox_call("POST", query_path)
 
-    # Apply voice parameters: speed, pitch, intonation, volume, and pause duration
     try:
         q_json = json.loads(query_data.decode("utf-8"))
         q_json["speedScale"] = v_speed
@@ -457,21 +555,19 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=Non
         for ap in q_json.get("accent_phrases", []):
             pm = ap.get("pause_mora")
             if pm and "vowel_length" in pm and pm["vowel_length"] is not None:
-                # Scale pause length according to voice_pause setting
                 pm["vowel_length"] = min(pm["vowel_length"] * v_pause, max(0.08, 0.35 * v_pause))
         query_data = json.dumps(q_json).encode("utf-8")
     except Exception as qe:
         log_msg(f"audio_query parameter adjustment error: {qe}")
 
-    synth_url = f"{VOICEVOX_URL}/synthesis?speaker={speaker}"
-    synth_req = urllib.request.Request(synth_url, data=query_data,
-                                       headers={"Content-Type": "application/json"},
-                                       method="POST")
-    with urllib.request.urlopen(synth_req, timeout=12) as resp:
-        wav_bytes = resp.read()
+    synth_path = f"/synthesis?speaker={speaker}"
+    wav_bytes = voicevox_call("POST", synth_path, body=query_data,
+                              headers={"Content-Type": "application/json"})
 
     with open(cached_path, "wb") as f:
         f.write(wav_bytes)
+
+    prune_audio_cache()
 
     current_audio_id += 1
     latest_audio_info = {
@@ -485,37 +581,43 @@ def synthesize_voicevox(synth_text, speaker=3, display_text=None, expression=Non
     }
     return latest_audio_info
 
+# In-Memory HTML Cache
+_html_cache = {}
+def get_cached_html(filename):
+    p = os.path.join(APP_DIR, filename)
+    try:
+        mtime = os.path.getmtime(p)
+        cached = _html_cache.get(filename)
+        if cached and cached[0] == mtime:
+            return cached[1]
+        with open(p, "r", encoding="utf-8") as f:
+            content = f.read()
+        _html_cache[filename] = (mtime, content)
+        return content
+    except Exception:
+        return ""
 
-# HTTP Routes
 @app.route("/")
 def index():
-    p = os.path.join(APP_DIR, "index.html")
-    with open(p, "r", encoding="utf-8") as f:
-        html = f.read()
+    html = get_cached_html("index.html")
     return HTTPResponse(
         body=html,
         status=200,
         headers={
             "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
-            "Pragma": "no-cache",
-            "Expires": "0"
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
         }
     )
 
 @app.route("/settings")
 def serve_settings():
-    p = os.path.join(APP_DIR, "settings.html")
-    with open(p, "r", encoding="utf-8") as f:
-        html = f.read()
+    html = get_cached_html("settings.html")
     return HTTPResponse(
         body=html,
         status=200,
         headers={
             "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
-            "Pragma": "no-cache",
-            "Expires": "0"
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
         }
     )
 
@@ -532,18 +634,20 @@ def api_close_settings():
     res = tracker_api.close_settings()
     return json.dumps({"success": True, "closed": bool(res)})
 
-
 @app.route("/static/<filename:path>")
 def serve_static(filename):
-    return static_file(filename, root=os.path.join(APP_DIR, "static"))
+    return static_file(filename, root=os.path.join(APP_DIR, "static"),
+                       headers={"Cache-Control": "public, max-age=3600"})
 
 @app.route("/model/<filepath:path>")
 def serve_model(filepath):
-    return static_file(filepath, root=MODEL_DIR)
+    return static_file(filepath, root=MODEL_DIR,
+                       headers={"Cache-Control": "public, max-age=3600"})
 
 @app.route("/audio/<filename:path>")
 def serve_audio(filename):
-    return static_file(filename, root=AUDIO_DIR)
+    return static_file(filename, root=AUDIO_DIR,
+                       headers={"Cache-Control": "public, max-age=86400, immutable"})
 
 model_status = "loading"
 
@@ -572,11 +676,10 @@ def api_health():
         "hwnd": hex(tracker_api.hwnd) if tracker_api.hwnd else None
     })
 
-
 @app.route("/api/bring_to_front")
 def api_bring_to_front():
     response.content_type = "application/json"
-    if tracker_api.hwnd and user32.IsWindow(tracker_api.hwnd):
+    if user32 and tracker_api.hwnd and user32.IsWindow(tracker_api.hwnd):
         user32.SetWindowPos(tracker_api.hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0040)
         return json.dumps({"success": True})
     return json.dumps({"success": False})
@@ -589,9 +692,19 @@ def poll_speech():
         return json.dumps(latest_audio_info)
     return json.dumps({})
 
+def is_trusted_request(req):
+    origin = req.headers.get("Origin") or req.headers.get("Referer") or ""
+    if not origin:
+        return True
+    origin_lower = origin.lower()
+    return "127.0.0.1" in origin_lower or "localhost" in origin_lower or origin_lower.startswith("file://")
+
 @app.route("/api/config", method=["GET", "POST"])
 def api_config():
     response.content_type = "application/json"
+    if request.method == "POST" and not is_trusted_request(request):
+        response.status = 403
+        return json.dumps({"error": "Forbidden: untrusted origin"})
     cfg = load_config()
     if request.method == "POST":
         data = request.json or {}
@@ -628,6 +741,9 @@ def api_config():
 @app.route("/api/speak", method=["GET", "POST"])
 def api_speak():
     response.content_type = "application/json"
+    if request.method == "POST" and not is_trusted_request(request):
+        response.status = 403
+        return json.dumps({"error": "Forbidden: untrusted origin"})
     if request.method == "POST":
         data = request.json or {}
         text = data.get("text", "")
@@ -644,7 +760,6 @@ def api_speak():
         volume = data.get("voice_volume")
         pause = data.get("voice_pause")
     else:
-        data = {}
         text = request.query.get("text", "")
         raw_text = request.query.get("raw_text") or request.query.get("display_text") or ""
         speaker = int(request.query.get("speaker", 3))
@@ -663,11 +778,8 @@ def api_speak():
         return json.dumps({"error": "Empty text"})
 
     target_text = raw_text if raw_text else text
-
-    # Analyze emotion from text
     emo_profile = analyze_emotion(target_text, default_speaker=speaker)
     clean_text = emo_profile.get("clean_text", target_text)
-
     display_text = clean_text
 
     if emotion is None:
@@ -681,7 +793,6 @@ def api_speak():
     if not speaker_explicit and emo_profile.get("speaker"):
         speaker = emo_profile.get("speaker")
 
-    # Apply emotion voice fine-tuning if not manually overridden
     cfg = load_config()
     if speed is None and "voice_speed_delta" in emo_profile:
         speed = max(0.5, min(2.0, float(cfg.get("voice_speed", 1.0)) + emo_profile["voice_speed_delta"]))
@@ -690,7 +801,6 @@ def api_speak():
     if intonation is None and "voice_intonation_delta" in emo_profile:
         intonation = max(0.0, min(2.0, float(cfg.get("voice_intonation", 1.0)) + emo_profile["voice_intonation_delta"]))
 
-    # Determine speech synthesis text (convert Korean to Katakana for VOICEVOX)
     if any(0xAC00 <= ord(c) <= 0xD7A3 for c in clean_text):
         synth_text = to_katakana(clean_text)
     else:
@@ -713,7 +823,6 @@ class ResourceMonitor:
 
     def speak_alert(self, text, expression="exp_surprise", motion="mtnFace_surprise"):
         now = time.time()
-        # Cooldown: at least 90s gap
         if now - self.last_speech_time < 90:
             return False
         self.last_speech_time = now
@@ -736,7 +845,6 @@ class ResourceMonitor:
                     continue
 
                 now = time.time()
-                # Cooldown: at least 12 minutes between overload alerts
                 if now - self.last_resource_alert_time >= 12 * 60:
                     cpu, mem = get_system_load()
                     if cpu > 90 or mem > 92:
@@ -750,16 +858,35 @@ class ResourceMonitor:
 
 resource_monitor = ResourceMonitor()
 
+class ThreadedWSGIServerAdapter(ServerAdapter):
+    def run(self, handler):
+        from wsgiref.simple_server import make_server, WSGIServer, WSGIRequestHandler
+        from socketserver import ThreadingMixIn
+
+        class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
+            daemon_threads = True
+
+        class QuietHandler(WSGIRequestHandler):
+            def log_message(self, format, *args):
+                pass
+
+        server = make_server(self.host, self.port, handler,
+                             server_class=ThreadingWSGIServer,
+                             handler_class=QuietHandler)
+        self.server = server
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            server.server_close()
 
 def run_server():
     try:
-        host = os.environ.get("HOST", "0.0.0.0") if not user32 else "127.0.0.1"
+        host = os.environ.get("HOST", "127.0.0.1")
         port = int(os.environ.get("PORT", os.environ.get("SERVER_PORT", 8989)))
-        log_msg(f"run_server() starting bottle on {host}:{port}...")
-        app.run(host=host, port=port, quiet=True)
+        log_msg(f"run_server() starting multi-threaded bottle on {host}:{port}...")
+        app.run(server=ThreadedWSGIServerAdapter, host=host, port=port, quiet=True)
     except Exception as e:
         log_msg(f"run_server() FATAL: {traceback.format_exc()}")
-
 
 def check_already_running():
     try:
@@ -768,7 +895,7 @@ def check_already_running():
             if resp.status == 200:
                 data = json.loads(resp.read().decode("utf-8"))
                 raw_hwnd = data.get("hwnd")
-                if raw_hwnd:
+                if raw_hwnd and user32:
                     h = int(raw_hwnd, 16)
                     if user32.IsWindow(h):
                         try:
@@ -781,7 +908,6 @@ def check_already_running():
     return False
 
 if __name__ == "__main__":
-    # If passed --speak argument, act as CLI client
     if len(sys.argv) > 2 and sys.argv[1] == "--speak":
         text_to_speak = " ".join(sys.argv[2:])
         try:
@@ -794,27 +920,27 @@ if __name__ == "__main__":
             print("Failed to send speak command:", e)
         sys.exit(0)
 
-    # Prevent duplicate companion windows
     if check_already_running():
         print("Zundamon Companion is already running! Brought to front.")
         sys.exit(0)
 
-    # Start local web server in background
     srv_thread = threading.Thread(target=run_server, daemon=True)
     srv_thread.start()
 
-    # Pre-warm VOICEVOX in background thread (never blocks GUI window startup)
     threading.Thread(target=ensure_voicevox_running, daemon=True).start()
+    try:
+        from hangul_to_kana import get_g2p
+        threading.Thread(target=get_g2p, daemon=True).start()
+    except Exception:
+        pass
 
-    # Server mode (for Linux hosting like Weirdhost, or headless execution)
     if not user32 or "--server" in sys.argv:
-        host = os.environ.get("HOST", "0.0.0.0")
+        host = os.environ.get("HOST", "127.0.0.1")
         port = int(os.environ.get("PORT", os.environ.get("SERVER_PORT", 8989)))
         print(f"🌱 즌다몬 웹 서버 모드로 실행됩니다: http://{host}:{port}")
-        app.run(host=host, port=port)
+        app.run(server=ThreadedWSGIServerAdapter, host=host, port=port)
         sys.exit(0)
 
-    # Configurable window dimensions (saved in config.json)
     cfg = load_config()
     win_w = cfg.get("win_w", 560)
     win_h = cfg.get("win_h", 750)
@@ -860,7 +986,6 @@ if __name__ == "__main__":
                     tracker_api.set_hwnd(hwnd)
                     log_msg(f"Attached hwnd: {hex(hwnd)}")
 
-                    # Apply DWM glass margins for complete per-pixel transparency
                     m = MARGINS(-1, -1, -1, -1)
                     ctypes.windll.dwmapi.DwmExtendFrameIntoClientArea(hwnd, ctypes.byref(m))
 
@@ -882,7 +1007,6 @@ if __name__ == "__main__":
         except Exception as e:
             log_msg(f"on_window_ready error: {traceback.format_exc()}")
 
-        # Initial greeting in background
         def greeting():
             time.sleep(1.0)
             try:
@@ -893,7 +1017,6 @@ if __name__ == "__main__":
                 log_msg(f"Greeting error: {traceback.format_exc()}")
         threading.Thread(target=greeting, daemon=True).start()
 
-        # Start PC Resource Monitor loop
         threading.Thread(target=resource_monitor.loop, daemon=True).start()
 
     log_msg("Calling webview.start()...")

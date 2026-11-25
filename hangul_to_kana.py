@@ -79,6 +79,9 @@ COMMON_WORDS = {
     'PDF': '피디에프', 'DB': '디비', 'SQL': '에스큐엘', 'LLM': '엘엘엠'
 }
 
+# Pre-sorted acronym list by descending length to prevent sub-string collision and avoid repeated sorting
+SORTED_COMMON_WORDS = tuple(sorted(COMMON_WORDS.items(), key=lambda x: -len(x[0])))
+
 _g2p_instance = None
 _g2p_failed = False
 
@@ -95,7 +98,7 @@ def get_g2p():
 def expand_english(text):
     if not text:
         return ""
-    for k, v in sorted(COMMON_WORDS.items(), key=lambda x: -len(x[0])):
+    for k, v in SORTED_COMMON_WORDS:
         text = re.sub(r'(?i)\b' + re.escape(k) + r'(?=[^a-zA-Z]|$)', v, text)
     def repl_caps(m):
         return ''.join(ENG_LETTER_MAP.get(c, c) for c in m.group(0))

@@ -766,6 +766,7 @@
 
       audio.onended = () => {
         isSpeaking = false;
+        try { source.disconnect(); } catch(e) {}
         // Keep bubble/subtitle visible for an extra 1.2s before fading out
         bubbleHideTimeout = setTimeout(() => {
           if (!isSpeaking) {
@@ -793,8 +794,11 @@
       audio.play().catch(e => console.error('Audio play error:', e));
     }
 
-    // Polling speech queue from local server
+    // Polling speech queue from local server with adaptive backoff
     let lastAudioId = 0;
+    let pollInterval = 80;
+    let idlePollRounds = 0;
+
     async function checkSpeechQueue() {
       try {
         const res = await fetch('/api/poll_speech?last=' + lastAudioId);
@@ -802,11 +806,18 @@
           const data = await res.json();
           if (data && data.audioId && data.audioId > lastAudioId) {
             lastAudioId = data.audioId;
+            idlePollRounds = 0;
+            pollInterval = 80;
             speakAudio(data.audioUrl, data.text, data.expression, data.motion, data.params, data.emotion);
+          } else {
+            idlePollRounds++;
+            if (idlePollRounds > 20) {
+              pollInterval = 250;
+            }
           }
         }
       } catch(e) {}
-      setTimeout(checkSpeechQueue, 70);
+      setTimeout(checkSpeechQueue, pollInterval);
     }
 
     setTimeout(checkSpeechQueue, 250);
